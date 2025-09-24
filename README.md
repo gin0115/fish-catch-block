@@ -10,6 +10,12 @@ A comprehensive WordPress plugin for anglers to document and display fishing cat
 
 Fish Catch Block provides two powerful Gutenberg blocks that transform WordPress into a comprehensive fishing journal platform. Built with modern WordPress block development practices, it offers a seamless experience for anglers to document their fishing adventures.
 
+## 📦 Installation
+
+**If you want to install this plugin**, DON'T DOWNLOAD THIS REPO. You can download the latest stable version from the [releases page](https://github.com/gin0115/fish-catch-block/releases) or just click [here](https://github.com/gin0115/fish-catch-block/releases/latest/download/fish-catch-block.zip).
+
+This repository contains the source code for development purposes. The releases contain the compiled, production-ready plugin files.
+
 ## ✨ Features
 
 ### 🎣 Fish Catch Block
