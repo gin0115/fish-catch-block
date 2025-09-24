@@ -16,8 +16,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer run-script packages-install -- --no-dev
+          
           npm ci --force
+          npm install
           npm run build
 
 
