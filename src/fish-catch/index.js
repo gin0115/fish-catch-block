@@ -19,21 +19,6 @@ import save from './save';
 import metadata from './block.json';
 
 /**
- * Frontend JavaScript - only runs on frontend
- */
-if (typeof window !== 'undefined' && typeof window.wp === 'undefined') {
-	console.log('Running frontend code');
-	// Import and execute frontend code
-	import('./frontend.js').then(() => {
-		console.log('Frontend imported successfully');
-	}).catch(err => {
-		console.error('Frontend import failed:', err);
-	});
-}
-
-
-
-/**
  * Deprecated save function for old block format
  */
 const deprecatedSave = () => {

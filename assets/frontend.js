@@ -3,7 +3,7 @@
  * Plain JavaScript - no webpack compilation needed
  */
 
-console.log('LOADING: /assets/frontend.js');
+console.log('LOADING: /frontend.js');
 
 (function() {
     'use strict';
@@ -74,9 +74,35 @@ console.log('LOADING: /assets/frontend.js');
             gallery.addEventListener('click', function(e) {
                 if (e.target.tagName === 'IMG') {
                     e.preventDefault();
-                    const images = gallery.querySelectorAll('img');
-                    const currentIndex = Array.from(images).indexOf(e.target);
-                    openLightbox(images, currentIndex);
+                    
+                    // Get all media from data attribute
+                    const mediaData = gallery.dataset.media;
+                    if (mediaData) {
+                        try {
+                            const allMedia = JSON.parse(mediaData);
+                            const images = allMedia.filter(item => item.mime && item.mime.startsWith('image/'));
+                            
+                            // Find current index by matching the clicked image URL
+                            const clickedSrc = e.target.src;
+                            const currentIndex = images.findIndex(img => img.url === clickedSrc);
+                            
+                            console.log('Gallery click: found', images.length, 'images, current index:', currentIndex);
+                            console.log('Clicked src:', clickedSrc);
+                            console.log('Available URLs:', images.map(img => img.url));
+                            openLightbox(images, currentIndex >= 0 ? currentIndex : 0);
+                        } catch (error) {
+                            console.error('Failed to parse media data:', error);
+                            // Fallback to visible images
+                            const images = gallery.querySelectorAll('img');
+                            const currentIndex = Array.from(images).indexOf(e.target);
+                            openLightbox(images, currentIndex);
+                        }
+                    } else {
+                        // Fallback to visible images
+                        const images = gallery.querySelectorAll('img');
+                        const currentIndex = Array.from(images).indexOf(e.target);
+                        openLightbox(images, currentIndex);
+                    }
                 }
             });
         });
@@ -84,6 +110,7 @@ console.log('LOADING: /assets/frontend.js');
 
     function openLightbox(images, currentIndex) {
         let currentImgIndex = currentIndex || 0;
+        console.log('Lightbox opened with', images.length, 'images');
         
         // Create overlay
         const overlay = document.createElement('div');
@@ -202,8 +229,16 @@ console.log('LOADING: /assets/frontend.js');
         // Show image function
         function showImage(index) {
             currentImgIndex = index;
-            img.src = images[currentImgIndex].src;
-            img.alt = images[currentImgIndex].alt;
+            // Handle both DOM elements and data objects
+            if (images[currentImgIndex].url) {
+                // Data object from JSON
+                img.src = images[currentImgIndex].url;
+                img.alt = images[currentImgIndex].alt;
+            } else {
+                // DOM element fallback
+                img.src = images[currentImgIndex].src;
+                img.alt = images[currentImgIndex].alt;
+            }
             if (counter) {
                 counter.textContent = `${currentImgIndex + 1} / ${images.length}`;
             }

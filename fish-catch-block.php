@@ -65,7 +65,7 @@ function fish_catch_block_frontend_assets() {
         // Enqueue frontend script for map and gallery functionality  
         wp_enqueue_script(
             'fish-catch-block-frontend',
-            plugin_dir_url(__FILE__) . 'frontend.js',
+            plugin_dir_url(__FILE__) . 'assets/frontend.js',
             array(),
             '1.0.0',
             true
