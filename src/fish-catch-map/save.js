@@ -18,14 +18,10 @@ export default function save({ attributes }) {
         mapStyle 
     } = attributes;
 
-    // Generate unique ID for this map instance
-    const mapId = `fish-catch-map-${Math.random().toString(36).substr(2, 9)}`;
-
     return (
         <div {...useBlockProps.save()}>
             <div className="fish-catch-map-block">
-                <div 
-                    id={mapId}
+                <div
                     className="fish-catch-map-container"
                     data-height={mapHeight}
                     data-min-catch-count={minCatchCount}
