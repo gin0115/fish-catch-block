@@ -3,6 +3,333 @@
  * Styles for lightbox, view toggles, and interactive elements
  */
 
+.fish-catch-block .map-section .leaflet-container {
+    height: 500px;
+}
+
+
+/* Consistent spacing fixes */
+
+.fish-catch-block .location-section {
+    margin-bottom: 24px !important;
+}
+
+.fish-catch-block .location-section h3 {
+    margin: 0 0 16px 0 !important;
+}
+
+.fish-catch-block .location-section .location-links {
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: center;
+    /* flex-wrap: wrap !important; */
+    gap: 8px !important;
+}
+
+.fish-catch-block .map-section {
+    margin-bottom: 24px !important;
+}
+
+.fish-catch-block .catches-section .catches-header {
+    margin-bottom: 24px !important;
+}
+
+
+/* Simple button styling */
+
+.fish-catch-block .location-section .location-links a {
+    padding: 8px 12px !important;
+    background-color: #007cba !important;
+    color: white !important;
+    border-radius: 4px !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.fish-catch-block .location-section .location-links a:hover {
+    background-color: #005a87 !important;
+    transform: none !important;
+}
+
+
+/* Catches section styles */
+
+.fish-catch-block .catches-section .catches-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+}
+
+.fish-catch-block .catches-section .catches-header h3 {
+    margin: 0 !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    color: #1e1e1e !important;
+}
+
+
+/* View toggle styles */
+
+.fish-catch-block .view-toggle-container {
+    display: flex !important;
+    gap: 4px !important;
+    background-color: #f0f0f0 !important;
+    border-radius: 6px !important;
+    padding: 2px !important;
+}
+
+.fish-catch-block .view-toggle-container .view-btn {
+    padding: 6px 12px !important;
+    border: none !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.fish-catch-block .view-toggle-container .view-btn.active {
+    background-color: #007cba !important;
+    color: white !important;
+}
+
+.fish-catch-block .view-toggle-container .view-btn:not(.active) {
+    background-color: transparent !important;
+    color: #666 !important;
+}
+
+
+/* Catches grid */
+
+.fish-catch-block .catches-grid {
+    display: grid !important;
+    gap: 16px !important;
+}
+
+.fish-catch-block .catches-grid.list-view {
+    grid-template-columns: 1fr !important;
+}
+
+.fish-catch-block .catches-grid.grid-view {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+}
+
+
+/* Catch card */
+
+.fish-catch-block .catch-card {
+    padding: 16px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+
+/* List view content */
+
+.fish-catch-block .list-view-content {
+    gap: 12px !important;
+    align-items: flex-start !important;
+}
+
+.fish-catch-block .list-view-content.show {
+    display: flex !important;
+}
+
+.fish-catch-block .list-view-content.hide {
+    display: none !important;
+}
+
+
+/* Grid view content */
+
+.fish-catch-block .grid-view-content.show {
+    display: block !important;
+}
+
+.fish-catch-block .grid-view-content.hide {
+    display: none !important;
+}
+
+
+/* Media gallery */
+
+.fish-catch-block .catch-media-gallery {
+    position: relative !important;
+    overflow: hidden !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    background-color: #f0f0f0 !important;
+}
+
+.fish-catch-block .catch-media-gallery img,
+.fish-catch-block .catch-media-gallery video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.fish-catch-block .catch-media-gallery img {
+    transition: transform 0.2s ease !important;
+}
+
+
+/* Media overlay */
+
+.fish-catch-block .media-overlay {
+    position: absolute !important;
+    bottom: 2px !important;
+    right: 2px !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    color: white !important;
+    padding: 2px 4px !important;
+    border-radius: 2px !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+}
+
+
+/* Content styles */
+
+.fish-catch-block .catch-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.fish-catch-block .catch-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.fish-catch-block .catch-header.with-comments {
+    margin-bottom: 4px !important;
+}
+
+.fish-catch-block .catch-header.no-comments {
+    margin-bottom: 0 !important;
+}
+
+.fish-catch-block .catch-title {
+    margin: 0 !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #1e1e1e !important;
+}
+
+.fish-catch-block .catch-measurements {
+    font-size: 14px !important;
+    color: #666 !important;
+    font-weight: 500 !important;
+}
+
+.fish-catch-block .catch-comments {
+    margin: 0 !important;
+    font-size: 13px !important;
+    color: #555 !important;
+    font-style: italic !important;
+    line-height: 1.3 !important;
+}
+
+
+/* Grid specific styles */
+
+.fish-catch-block .grid-view-content .grid-header {
+    margin-bottom: 12px !important;
+}
+
+.fish-catch-block .grid-view-content .catch-title {
+    margin: 0 0 8px 0 !important;
+}
+
+.fish-catch-block .grid-view-content .catch-measurements {
+    margin: 0 0 8px 0 !important;
+}
+
+.fish-catch-block .grid-view-content .catch-comments {
+    line-height: 1.4 !important;
+}
+
+
+/* Gallery grid */
+
+.fish-catch-block .gallery-grid {
+    display: grid !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+}
+
+.fish-catch-block .gallery-item {
+    position: relative !important;
+    aspect-ratio: 1 !important;
+    overflow: hidden !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    background-color: #f0f0f0 !important;
+}
+
+
+/* No media placeholder */
+
+.fish-catch-block .no-media-placeholder {
+    width: 100% !important;
+    height: 120px !important;
+    background-color: #e0e0e0 !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 12px !important;
+}
+
+.fish-catch-block .no-media-initials {
+    font-size: 24px !important;
+    font-weight: bold !important;
+    color: #666 !important;
+    margin-bottom: 4px !important;
+}
+
+.fish-catch-block .no-media-text {
+    font-size: 12px !important;
+    color: #999 !important;
+}
+
+
+/* No catches message */
+
+.fish-catch-block .no-catches {
+    text-align: center !important;
+    padding: 40px 20px !important;
+    color: #666 !important;
+    font-style: italic !important;
+}
+
+.fish-catch-block .no-catches p {
+    margin: 0 !important;
+    font-size: 16px !important;
+}
+
+
+/* Compact media for list view */
+
+.fish-catch-block .compact-media {
+    flex-shrink: 0 !important;
+}
+
+.fish-catch-block .compact-media-placeholder {
+    flex-shrink: 0 !important;
+    background-color: #e0e0e0 !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    color: #999 !important;
+    font-weight: bold !important;
+}
+
 
 /* Lightbox styles */
 

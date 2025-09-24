@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "title": "Fish Catch Block",
   "category": "widgets",
-  "icon": "fish",
+  "icon": "🐟",
   "description": "A simple fish catch block for displaying fishing information.",
   "supports": {
     "html": false,
@@ -63,6 +63,10 @@
     "imageSize": {
       "type": "string",
       "default": "medium"
+    },
+    "mapStyle": {
+      "type": "string",
+      "default": "OpenStreetMap.Mapnik"
     }
   },
   "textdomain": "fish-catch",

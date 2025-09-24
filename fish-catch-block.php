@@ -12,6 +12,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+define('FISH_CATCH_BLOCK_VERSION', '1.0.0');
+define('FISH_CATCH_BLOCK_DIR', plugin_dir_path(__FILE__));
+define('FISH_CATCH_BLOCK_URL', plugin_dir_url(__FILE__));
 /**
  * Enqueue block assets
  */
@@ -30,6 +33,7 @@ function fish_catch_block_assets() {
                 $metadata['editorScriptDependencies'] ?? array('wp-blocks', 'wp-element', 'wp-editor'),
                 $metadata['version'] ?? '1.0.0'
             );
+            
         }
         
         // Enqueue editor style
@@ -94,9 +98,105 @@ function fish_catch_block_frontend_assets() {
         '1.9.4',
         true
     );
+    
+    // Enqueue Leaflet Providers for map themes
+    wp_enqueue_script(
+        'leaflet-providers-js',
+        'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js',
+        array('leaflet-js'),
+        '2.0.0',
+        true
+    );
+    
+    // Pass API keys to frontend JavaScript
+    wp_localize_script('fish-catch-block-frontend', 'fishCatchMapConfig', array(
+        'thunderforestApiKey' => sanitize_text_field(get_option('fish_catch_thunderforest_api_key', '')),
+        'jawgAccessToken' => sanitize_text_field(get_option('fish_catch_jawg_access_token', ''))
+    ));
 
 }
 add_action('wp_enqueue_scripts', 'fish_catch_block_frontend_assets');
+
+/**
+ * Register settings for map API keys
+ */
+function fish_catch_block_register_settings() {
+    // Register Thunderforest API key setting
+    register_setting(
+        'general',
+        'fish_catch_thunderforest_api_key',
+        array(
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'show_in_rest' => false,
+            'default' => ''
+        )
+    );
+    
+    // Register Jawg access token setting
+    register_setting(
+        'general',
+        'fish_catch_jawg_access_token',
+        array(
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'show_in_rest' => false,
+            'default' => ''
+        )
+    );
+    
+    // Add settings section
+    add_settings_section(
+        'fish_catch_map_settings',
+        __('Fish Catch Block - Map Settings', 'fish-catch-block'),
+        'fish_catch_block_settings_section_callback',
+        'general'
+    );
+    
+    // Add Thunderforest API key field
+    add_settings_field(
+        'fish_catch_thunderforest_api_key',
+        __('Thunderforest API Key', 'fish-catch-block'),
+        'fish_catch_thunderforest_api_key_callback',
+        'general',
+        'fish_catch_map_settings'
+    );
+    
+    // Add Jawg access token field
+    add_settings_field(
+        'fish_catch_jawg_access_token',
+        __('Jawg Maps Access Token', 'fish-catch-block'),
+        'fish_catch_jawg_access_token_callback',
+        'general',
+        'fish_catch_map_settings'
+    );
+}
+add_action('admin_init', 'fish_catch_block_register_settings');
+
+/**
+ * Settings section callback
+ */
+function fish_catch_block_settings_section_callback() {
+    echo '<p>' . esc_html__('Configure API keys for map providers that require authentication.', 'fish-catch-block') . '</p>';
+}
+
+/**
+ * Thunderforest API key field callback
+ */
+function fish_catch_thunderforest_api_key_callback() {
+    $value = get_option('fish_catch_thunderforest_api_key', '');
+    echo '<input type="text" id="fish_catch_thunderforest_api_key" name="fish_catch_thunderforest_api_key" value="' . esc_attr($value) . '" class="regular-text" />';
+    echo '<p class="description">' . esc_html__('Required for Thunderforest map themes (Landscape, Transport, etc.). Get your API key from', 'fish-catch-block') . ' <a href="https://www.thunderforest.com/maps/api/" target="_blank">Thunderforest</a></p>';
+}
+
+/**
+ * Jawg access token field callback
+ */
+function fish_catch_jawg_access_token_callback() {
+    $value = get_option('fish_catch_jawg_access_token', '');
+    echo '<input type="text" id="fish_catch_jawg_access_token" name="fish_catch_jawg_access_token" value="' . esc_attr($value) . '" class="regular-text" />';
+    echo '<p class="description">' . esc_html__('Required for Jawg Maps themes (Streets, Dark, Matrix, etc.). Get your access token from', 'fish-catch-block') . ' <a href="https://www.jawg.io/" target="_blank">Jawg Maps</a></p>';
+}
 
 /**
  * Register the blocks
@@ -115,6 +215,23 @@ function fish_catch_block_init() {
     }
 }
 add_action('init', 'fish_catch_block_init');
+
+/**
+ * Pass API keys to block editor scripts
+ */
+function fish_catch_block_editor_assets() {
+    $api_config = array(
+        'thunderforestApiKey' => sanitize_text_field(get_option('fish_catch_thunderforest_api_key', '')),
+        'jawgAccessToken' => sanitize_text_field(get_option('fish_catch_jawg_access_token', ''))
+    );
+    
+    // Pass API keys to main fish catch block editor
+    wp_localize_script('fish-catch-fish-catch-editor-script', 'fishCatchMapConfig', $api_config);
+    
+    // Pass API keys to fish catch map block editor  
+    wp_localize_script('fish-catch-fish-catch-map-editor-script', 'fishCatchMapConfig', $api_config);
+}
+add_action('enqueue_block_editor_assets', 'fish_catch_block_editor_assets');
 
 /**
  * Register custom meta fields for fish catch data

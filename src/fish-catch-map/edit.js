@@ -9,7 +9,8 @@ import {
 import { 
     PanelBody, 
     RangeControl,
-    ToggleControl 
+    ToggleControl,
+    SelectControl 
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useRef } from '@wordpress/element';
@@ -28,7 +29,8 @@ export default function Edit({ attributes, setAttributes }) {
         minCatchCount, 
         showPostTitles, 
         showCatchCount,
-        mapZoom 
+        mapZoom,
+        mapStyle 
     } = attributes;
     
     const mapRef = useRef(null);
@@ -72,11 +74,17 @@ export default function Edit({ attributes, setAttributes }) {
     useEffect(() => {
         if (!mapRef.current || mapData.length === 0) return;
 
-        // Load Leaflet if not already loaded
+        // Load Leaflet and providers if not already loaded
         if (typeof window.L === 'undefined') {
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = initializeMap;
+            script.onload = () => {
+                // Load leaflet-providers after leaflet
+                const providersScript = document.createElement('script');
+                providersScript.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
+                providersScript.onload = initializeMap;
+                document.head.appendChild(providersScript);
+            };
             document.head.appendChild(script);
 
             const link = document.createElement('link');
@@ -101,10 +109,34 @@ export default function Edit({ attributes, setAttributes }) {
                 scrollWheelZoom: false
             }).fitBounds(bounds, { padding: [20, 20] });
 
-            window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
+            // Add tile layer based on selected style
+            let tileLayer;
+            if (window.L.tileLayer.provider && mapStyle !== 'OpenStreetMap.Mapnik') {
+                try {
+                    // Handle API key authentication for different providers
+                    let providerOptions = {};
+                    
+                    if (mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
+                        providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
+                    }
+                    
+                    if (mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
+                        providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
+                    }
+                    
+                    tileLayer = window.L.tileLayer.provider(mapStyle, providerOptions);
+                } catch (e) {
+                    // Fallback to OpenStreetMap if provider fails
+                    tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    });
+                }
+            } else {
+                tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                });
+            }
+            tileLayer.addTo(map);
 
             // Add markers
             mapData.forEach(item => {
@@ -136,6 +168,37 @@ export default function Edit({ attributes, setAttributes }) {
         <>
             <InspectorControls>
                 <PanelBody title={__('Map Settings', 'fish-catch')}>
+                    <SelectControl
+                        label={__('Map Style', 'fish-catch')}
+                        value={mapStyle}
+                        onChange={(value) => setAttributes({ mapStyle: value })}
+                        options={[
+                            { label: __('OpenStreetMap', 'fish-catch'), value: 'OpenStreetMap.Mapnik' },
+                            { label: __('Satellite (Esri)', 'fish-catch'), value: 'Esri.WorldImagery' },
+                            { label: __('Terrain (Stamen)', 'fish-catch'), value: 'Stamen.Terrain' },
+                            { label: __('Watercolor (Stamen)', 'fish-catch'), value: 'Stamen.Watercolor' },
+                            { label: __('Toner (Stamen)', 'fish-catch'), value: 'Stamen.Toner' },
+                            { label: __('CartoDB Positron', 'fish-catch'), value: 'CartoDB.Positron' },
+                            { label: __('CartoDB Dark Matter', 'fish-catch'), value: 'CartoDB.DarkMatter' },
+                            { label: __('OpenTopoMap', 'fish-catch'), value: 'OpenTopoMap' },
+                            { label: __('Wikimedia', 'fish-catch'), value: 'Wikimedia' },
+                            { label: __('Thunderforest Landscape', 'fish-catch'), value: 'Thunderforest.Landscape' },
+                            { label: __('Thunderforest Outdoors', 'fish-catch'), value: 'Thunderforest.Outdoors' },
+                            { label: __('Thunderforest Transport Dark', 'fish-catch'), value: 'Thunderforest.TransportDark' },
+                            { label: __('Stadia Smooth Dark', 'fish-catch'), value: 'Stadia.AlidadeSmoothDark' },
+                            { label: __('Stadia Toner', 'fish-catch'), value: 'Stadia.StamenToner' },
+                            { label: __('Jawg Dark', 'fish-catch'), value: 'Jawg.Dark' },
+                            { label: __('Jawg Matrix', 'fish-catch'), value: 'Jawg.Matrix' },
+                            { label: __('TopPlus Grey', 'fish-catch'), value: 'TopPlusOpen.Grey' },
+                            { label: __('NASAGIBS ViirsEarthAtNight', 'fish-catch'), value: 'NASAGIBS.ViirsEarthAtNight2012' },
+                            { label: __('Esri World Street Map', 'fish-catch'), value: 'Esri.WorldStreetMap' },
+                            { label: __('Esri NatGeo World Map', 'fish-catch'), value: 'Esri.NatGeoWorldMap' },
+                            { label: __('Esri World Topo Map', 'fish-catch'), value: 'Esri.WorldTopoMap' },
+                            { label: __('USGS Topo', 'fish-catch'), value: 'USGS.USTopo' },
+                            { label: __('USGS Imagery', 'fish-catch'), value: 'USGS.USImagery' }
+                        ]}
+                        help={__('Choose a map style theme', 'fish-catch')}
+                    />
                     <RangeControl
                         label={__('Map Height (px)', 'fish-catch')}
                         value={mapHeight}

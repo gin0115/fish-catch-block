@@ -29,13 +29,15 @@ console.log('LOADING: /src/fish-catch-map/frontend.js');
         const minCatchCount = parseInt(mapContainer.dataset.minCatchCount) || 1;
         const showPostTitles = mapContainer.dataset.showPostTitles === '1';
         const showCatchCount = mapContainer.dataset.showCatchCount === '1';
+        const mapStyle = mapContainer.dataset.mapStyle || 'OpenStreetMap.Mapnik';
 
-        console.log('Fish Catch Map: Initializing map', { mapId, minCatchCount, showPostTitles, showCatchCount });
+        console.log('Fish Catch Map: Initializing map', { mapId, minCatchCount, showPostTitles, showCatchCount, mapStyle });
 
         try {
-            // Load Leaflet if not already available
+            // Load Leaflet and providers if not already available
             if (typeof L === 'undefined') {
                 await loadLeaflet();
+                await loadLeafletProviders();
             }
 
             // Fetch fish catch posts
@@ -59,10 +61,34 @@ console.log('LOADING: /src/fish-catch-map/frontend.js');
                 maxZoom: 15
             });
 
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
+            // Add tile layer based on selected style
+            let tileLayer;
+            if (L.tileLayer.provider && mapStyle !== 'OpenStreetMap.Mapnik') {
+                try {
+                    // Handle API key authentication for different providers
+                    let providerOptions = {};
+                    
+                    if (mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
+                        providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
+                    }
+                    
+                    if (mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
+                        providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
+                    }
+                    
+                    tileLayer = L.tileLayer.provider(mapStyle, providerOptions);
+                } catch (e) {
+                    console.warn('Failed to load map style:', mapStyle, 'Falling back to OpenStreetMap');
+                    tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    });
+                }
+            } else {
+                tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                });
+            }
+            tileLayer.addTo(map);
 
             // Add custom fish markers for each fishing location
             fishCatchData.forEach(item => {
@@ -372,6 +398,22 @@ console.log('LOADING: /src/fish-catch-map/frontend.js');
                 <p style="margin: 0; font-size: 14px;">${errorMsg}</p>
             </div>
         `;
+    }
+
+    function loadLeafletProviders() {
+        return new Promise((resolve, reject) => {
+            // Only load if not already loaded
+            if (typeof L !== 'undefined' && L.tileLayer && L.tileLayer.provider) {
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
     }
 
 })();

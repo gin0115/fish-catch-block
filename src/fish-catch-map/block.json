@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "title": "Fish Catch Map",
     "category": "widgets",
-    "icon": "location-alt",
+    "icon": "🐠",
     "description": "Display a map showing all posts with fish catches and coordinates.",
     "supports": {
         "html": false,
@@ -41,7 +41,7 @@
         },
         "mapStyle": {
             "type": "string",
-            "default": "openstreetmap"
+            "default": "OpenStreetMap.Mapnik"
         },
         "markerStyle": {
             "type": "string",

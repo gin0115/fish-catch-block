@@ -53,8 +53,10 @@ class MapManager {
 		this.defaultZoom = options.defaultZoom || 13;
 		this.defaultCenter = options.defaultCenter || [51.505, -0.09]; // London default
 		this.onLocationSelect = options.onLocationSelect || (() => {});
+		this.mapStyle = options.mapStyle || 'OpenStreetMap.Mapnik';
 		this.map = null;
 		this.marker = null;
+		this.tileLayer = null;
 		this.isLeafletLoaded = false;
 		
 		// Configuration for future extensions
@@ -137,17 +139,63 @@ class MapManager {
 		// Initialize map
 		this.map = window.L.map(this.containerId).setView(this.defaultCenter, this.defaultZoom);
 
-		// Add OpenStreetMap tile layer
-		window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-			attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-			maxZoom: 19
-		}).addTo(this.map);
+		// Add tile layer based on map style
+		this.updateMapStyle();
 
 		// Add click handler for setting location
 		this.map.on('click', (e) => this.handleMapClick(e));
 
 		// Add geolocation control
 		this.addGeolocationControl();
+	}
+
+	/**
+	 * Update map style
+	 */
+	updateMapStyle() {
+		// Remove existing tile layer
+		if (this.tileLayer) {
+			this.map.removeLayer(this.tileLayer);
+		}
+
+		// Add new tile layer based on selected style
+		if (window.L.tileLayer.provider && this.mapStyle !== 'OpenStreetMap.Mapnik') {
+			try {
+				// Handle API key authentication for different providers
+				let providerOptions = {};
+				
+				if (this.mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
+					providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
+				}
+				
+				if (this.mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
+					providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
+				}
+				
+				this.tileLayer = window.L.tileLayer.provider(this.mapStyle, providerOptions);
+			} catch (e) {
+				console.warn('Failed to load map style:', this.mapStyle, 'Falling back to OpenStreetMap');
+				this.tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '© OpenStreetMap contributors'
+				});
+			}
+		} else {
+			this.tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				attribution: '© OpenStreetMap contributors'
+			});
+		}
+		
+		if (this.map) {
+			this.tileLayer.addTo(this.map);
+		}
+	}
+
+	/**
+	 * Set map style
+	 */
+	setMapStyle(mapStyle) {
+		this.mapStyle = mapStyle;
+		this.updateMapStyle();
 	}
 
 	/**
@@ -273,7 +321,7 @@ class MapManager {
  * editor. This represents what the editor will render when the block is used.
  */
 export default function Edit({ attributes, setAttributes }) {
-	const { locationAddress, latitude, longitude, catches, sizeUnit, weightUnit, defaultView, cardBackgroundColor, cardBorderColor, cardBorderRadius, imageSize } = attributes;
+	const { locationAddress, latitude, longitude, catches, sizeUnit, weightUnit, defaultView, cardBackgroundColor, cardBorderColor, cardBorderRadius, imageSize, mapStyle } = attributes;
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingIndex, setEditingIndex] = useState(null);
 	const [newCatch, setNewCatch] = useState({
@@ -385,6 +433,7 @@ export default function Edit({ attributes, setAttributes }) {
 				mapManagerRef.current = new MapManager({
 					containerId: 'fish-catch-map-modal',
 					defaultCenter: latitude && longitude ? [parseFloat(latitude), parseFloat(longitude)] : [54.5, -3], // UK center
+					mapStyle: mapStyle || 'OpenStreetMap.Mapnik',
 					onLocationSelect: (lat, lng) => {
 						setAttributes({ 
 							latitude: lat.toFixed(6), 
@@ -411,6 +460,13 @@ export default function Edit({ attributes, setAttributes }) {
 			}
 		};
 	}, [isMapModalOpen, latitude, longitude]);
+
+	// Map style update effect
+	useEffect(() => {
+		if (mapManagerRef.current && mapStyle) {
+			mapManagerRef.current.setMapStyle(mapStyle);
+		}
+	}, [mapStyle]);
 
 	// Cleanup effect
 	useEffect(() => {
@@ -590,6 +646,40 @@ export default function Edit({ attributes, setAttributes }) {
 						onChange={(value) => setAttributes({ cardBorderRadius: parseInt(value) || 12 })}
 						help={__( 'Border radius for catch cards in pixels', 'fish-catch' )}
 						type="number"
+					/>
+				</PanelBody>
+				
+				<PanelBody title={__('Map Settings', 'fish-catch')}>
+					<SelectControl
+						label={__('Map Style', 'fish-catch')}
+						value={mapStyle}
+						onChange={(value) => setAttributes({ mapStyle: value })}
+						options={[
+							{ label: __('OpenStreetMap', 'fish-catch'), value: 'OpenStreetMap.Mapnik' },
+							{ label: __('Satellite (Esri)', 'fish-catch'), value: 'Esri.WorldImagery' },
+							{ label: __('Terrain (Stamen)', 'fish-catch'), value: 'Stamen.Terrain' },
+							{ label: __('Watercolor (Stamen)', 'fish-catch'), value: 'Stamen.Watercolor' },
+							{ label: __('Toner (Stamen)', 'fish-catch'), value: 'Stamen.Toner' },
+							{ label: __('CartoDB Positron', 'fish-catch'), value: 'CartoDB.Positron' },
+							{ label: __('CartoDB Dark Matter', 'fish-catch'), value: 'CartoDB.DarkMatter' },
+							{ label: __('OpenTopoMap', 'fish-catch'), value: 'OpenTopoMap' },
+							{ label: __('Wikimedia', 'fish-catch'), value: 'Wikimedia' },
+							{ label: __('Thunderforest Landscape', 'fish-catch'), value: 'Thunderforest.Landscape' },
+							{ label: __('Thunderforest Outdoors', 'fish-catch'), value: 'Thunderforest.Outdoors' },
+							{ label: __('Thunderforest Transport Dark', 'fish-catch'), value: 'Thunderforest.TransportDark' },
+							{ label: __('Stadia Smooth Dark', 'fish-catch'), value: 'Stadia.AlidadeSmoothDark' },
+							{ label: __('Stadia Toner', 'fish-catch'), value: 'Stadia.StamenToner' },
+							{ label: __('Jawg Dark', 'fish-catch'), value: 'Jawg.Dark' },
+							{ label: __('Jawg Matrix', 'fish-catch'), value: 'Jawg.Matrix' },
+							{ label: __('TopPlus Grey', 'fish-catch'), value: 'TopPlusOpen.Grey' },
+							{ label: __('NASAGIBS ViirsEarthAtNight', 'fish-catch'), value: 'NASAGIBS.ViirsEarthAtNight2012' },
+							{ label: __('Esri World Street Map', 'fish-catch'), value: 'Esri.WorldStreetMap' },
+							{ label: __('Esri NatGeo World Map', 'fish-catch'), value: 'Esri.NatGeoWorldMap' },
+							{ label: __('Esri World Topo Map', 'fish-catch'), value: 'Esri.WorldTopoMap' },
+							{ label: __('USGS Topo', 'fish-catch'), value: 'USGS.USTopo' },
+							{ label: __('USGS Imagery', 'fish-catch'), value: 'USGS.USImagery' }
+						]}
+						help={__('Choose a map style theme for the location map', 'fish-catch')}
 					/>
 				</PanelBody>
 			</InspectorControls>

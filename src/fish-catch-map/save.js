@@ -14,7 +14,8 @@ export default function save({ attributes }) {
         mapHeight, 
         minCatchCount, 
         showPostTitles, 
-        showCatchCount 
+        showCatchCount,
+        mapStyle 
     } = attributes;
 
     // Generate unique ID for this map instance
@@ -30,6 +31,7 @@ export default function save({ attributes }) {
                     data-min-catch-count={minCatchCount}
                     data-show-post-titles={showPostTitles ? '1' : '0'}
                     data-show-catch-count={showCatchCount ? '1' : '0'}
+                    data-map-style={mapStyle || 'OpenStreetMap.Mapnik'}
                     style={{ 
                         height: `${mapHeight}px`,
                         border: '1px solid #ddd',

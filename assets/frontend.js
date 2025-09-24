@@ -28,37 +28,74 @@ console.log('LOADING: /frontend.js');
     }
 
     function initMap(block) {
-        const mapContainer = block.querySelector('[id^="fish-catch-map-"]');
+        const mapContainer = block.querySelector('.map-container');
         if (!mapContainer) {
             console.log('Fish Catch Block: No map container found');
             return;
         }
 
-        const mapId = mapContainer.id;
+        // Generate unique ID if not present
+        let mapId = mapContainer.id;
+        if (!mapId) {
+            mapId = `fish-catch-map-${Math.random().toString(36).substr(2, 9)}`;
+            mapContainer.id = mapId;
+        }
         const lat = parseFloat(mapContainer.dataset.lat);
         const lng = parseFloat(mapContainer.dataset.lng);
         const locationName = mapContainer.dataset.location || 'Fishing Location';
+        const mapStyle = mapContainer.dataset.mapStyle || mapContainer.getAttribute('data-map-style') || 'OpenStreetMap.Mapnik';
 
-        console.log('Fish Catch Block: Map data', { mapId, lat, lng, locationName });
+        console.log('Fish Catch Block: Map data', { mapId, lat, lng, locationName, mapStyle });
+        console.log('Fish Catch Block: Raw map attributes', {
+            'dataset.mapStyle': mapContainer.dataset.mapStyle,
+            'getAttribute(data-map-style)': mapContainer.getAttribute('data-map-style'),
+            'all dataset': mapContainer.dataset
+        });
 
         if (isNaN(lat) || isNaN(lng)) {
             console.log('Fish Catch Block: Invalid coordinates');
             return;
         }
 
-        // Wait for Leaflet to load
+        // Wait for Leaflet and providers to load
         if (typeof L === 'undefined') {
-            setTimeout(() => initMap(block), 100);
+            loadLeafletAndProviders().then(() => {
+                initMap(block);
+            });
             return;
         }
 
         try {
             const map = L.map(mapId).setView([lat, lng], 13);
             
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
+            // Add tile layer based on selected style
+            let tileLayer;
+            if (L.tileLayer.provider && mapStyle !== 'OpenStreetMap.Mapnik') {
+                try {
+                    // Handle API key authentication for different providers
+                    let providerOptions = {};
+                    
+                    if (mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
+                        providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
+                    }
+                    
+                    if (mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
+                        providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
+                    }
+                    
+                    tileLayer = L.tileLayer.provider(mapStyle, providerOptions);
+                } catch (e) {
+                    console.warn('Failed to load map style:', mapStyle, 'Falling back to OpenStreetMap');
+                    tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    });
+                }
+            } else {
+                tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                });
+            }
+            tileLayer.addTo(map);
 
             L.marker([lat, lng]).addTo(map)
                 .bindPopup(locationName)
@@ -226,10 +263,15 @@ console.log('LOADING: /frontend.js');
     }
 
     function initViewToggle(block) {
-        const toggle = block.querySelector('[id^="view-toggle-"]');
+        const toggle = block.querySelector('.view-toggle-container');
         const catchesGrid = block.querySelector('.catches-grid');
         
         if (!toggle || !catchesGrid) return;
+
+        // Generate unique ID if not present
+        if (!toggle.id) {
+            toggle.id = `view-toggle-${Math.random().toString(36).substr(2, 9)}`;
+        }
 
         toggle.addEventListener('click', function(e) {
             if (e.target.classList.contains('view-btn')) {
@@ -246,6 +288,42 @@ console.log('LOADING: /frontend.js');
                 catchesGrid.className = 'catches-grid ' + e.target.dataset.view;
 
                 // The CSS handles show/hide for list vs grid content automatically
+            }
+        });
+    }
+
+    function loadLeafletAndProviders() {
+        return new Promise((resolve, reject) => {
+            // Load Leaflet if not already loaded
+            if (typeof L === 'undefined') {
+                const cssLink = document.createElement('link');
+                cssLink.rel = 'stylesheet';
+                cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                document.head.appendChild(cssLink);
+
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.onload = () => {
+                    // Load leaflet-providers after leaflet
+                    const providersScript = document.createElement('script');
+                    providersScript.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
+                    providersScript.onload = resolve;
+                    providersScript.onerror = resolve; // Continue even if providers fail
+                    document.head.appendChild(providersScript);
+                };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            } else {
+                // Leaflet is loaded, check for providers
+                if (!L.tileLayer.provider) {
+                    const providersScript = document.createElement('script');
+                    providersScript.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
+                    providersScript.onload = resolve;
+                    providersScript.onerror = resolve; // Continue even if providers fail
+                    document.head.appendChild(providersScript);
+                } else {
+                    resolve();
+                }
             }
         });
     }
