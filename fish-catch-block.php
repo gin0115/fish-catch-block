@@ -1,10 +1,15 @@
 <?php
 /**
  * Plugin Name: Fish Catch Block
- * Description: A simple WordPress block for displaying fish catch information.
+ * Plugin URI: https://github.com/gin0115/fish-catch-block
+ * Description: A comprehensive WordPress block for anglers to document and display their fishing catches with locations, photos, and interactive maps.
  * Version: 1.0.0
- * Author: Your Name
+ * Author: Glynn Quelch
+ * Author URI: https://github.com/gin0115
  * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: fish-catch
+ * GitHub Plugin URI: gin0115/fish-catch-block
  */
 
 // Prevent direct access
