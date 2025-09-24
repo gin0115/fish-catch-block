@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "fish-catch/fish-catch",
+  "version": "0.1.0",
+  "title": "Fish Catch Block",
+  "category": "widgets",
+  "icon": "fish",
+  "description": "A simple fish catch block for displaying fishing information.",
+  "supports": {
+    "html": false,
+    "color": {
+      "background": true,
+      "text": true,
+      "link": true
+    },
+    "spacing": {
+      "padding": true,
+      "margin": true
+    }
+  },
+  "attributes": {
+    "locationAddress": {
+      "type": "string",
+      "default": ""
+    },
+    "latitude": {
+      "type": "string",
+      "default": ""
+    },
+    "longitude": {
+      "type": "string",
+      "default": ""
+    },
+    "catches": {
+      "type": "array",
+      "default": []
+    },
+    "sizeUnit": {
+      "type": "string",
+      "default": "cm"
+    },
+    "weightUnit": {
+      "type": "string",
+      "default": "lbs"
+    },
+    "defaultView": {
+      "type": "string",
+      "default": "list"
+    },
+    "cardBackgroundColor": {
+      "type": "string",
+      "default": "#f9f9f9"
+    },
+    "cardBorderColor": {
+      "type": "string",
+      "default": "#ddd"
+    },
+    "cardBorderRadius": {
+      "type": "number",
+      "default": 12
+    },
+    "imageSize": {
+      "type": "string",
+      "default": "medium"
+    }
+  },
+  "textdomain": "fish-catch",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

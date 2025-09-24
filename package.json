@@ -1,0 +1,25 @@
+{
+    "name": "fish-catch-block",
+    "version": "1.0.0",
+    "description": "A simple WordPress block using wp-scripts",
+    "author": "Your Name",
+    "license": "GPL-2.0-or-later",
+    "keywords": [
+        "wordpress",
+        "block"
+    ],
+    "engines": {
+        "node": ">=18.0",
+        "npm": ">=8.0"
+    },
+    "devDependencies": {
+        "@wordpress/scripts": "^30.0.6"
+    },
+    "scripts": {
+        "build": "wp-scripts build --webpack-src-dir=src --output-path=build",
+        "start": "wp-scripts start --webpack-src-dir=src --output-path=build",
+        "lint:js": "wp-scripts lint-js src",
+        "lint:css": "wp-scripts lint-style src",
+        "format": "wp-scripts format src"
+    }
+}

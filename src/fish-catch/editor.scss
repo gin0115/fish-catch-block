@@ -1,0 +1,42 @@
+/**
+ * The following styles get applied inside the editor only.
+ */
+
+.wp-block-fish-catch-fish-catch {
+    border: 2px dashed #007cba;
+    padding: 20px;
+    background-color: #f0f8ff;
+    h3 {
+        color: #007cba;
+        margin-top: 0;
+    }
+    .location-info {
+        margin-top: 15px;
+        p {
+            margin: 8px 0;
+            strong {
+                color: #007cba;
+            }
+        }
+        .no-location {
+            color: #666;
+            font-style: italic;
+        }
+    }
+    // Editor-specific catch card styles
+    .catch-card {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 16px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 8px;
+    }
+    // Editor view toggle
+    .view-btn {
+        transition: all 0.2s ease;
+        &:hover {
+            transform: translateY(-1px);
+        }
+    }
+}

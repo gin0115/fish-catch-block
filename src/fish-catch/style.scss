@@ -1,0 +1,67 @@
+/**
+ * The following styles get applied both on the front of your site
+ * and in the editor.
+ */
+
+.wp-block-fish-catch-fish-catch {
+    // Default styles - will be overridden by block style attributes
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    h3 {
+        margin-top: 0;
+        font-size: 1.5em;
+    }
+    .location-info {
+        margin-top: 15px;
+        p {
+            margin: 8px 0;
+            strong {
+                font-weight: 600;
+            }
+        }
+        .no-location {
+            opacity: 0.7;
+            font-style: italic;
+        }
+    }
+    // Map styles
+    .map-section {
+        margin: 20px 0;
+        #fish-catch-map {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+    }
+    // Catches section
+    .catches-section {
+        margin-top: 20px;
+        .catches-grid {
+            margin-top: 16px;
+        }
+        .catch-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+        }
+    }
+    // View toggle buttons
+    .view-btn {
+        transition: all 0.2s ease;
+        &:hover {
+            transform: translateY(-1px);
+        }
+    }
+    // Gallery styles
+    .catch-media-gallery {
+        img,
+        video {
+            transition: transform 0.2s ease;
+            &:hover {
+                transform: scale(1.05);
+            }
+        }
+    }
+}
