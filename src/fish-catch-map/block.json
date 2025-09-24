@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "title": "Fish Catch Map",
     "category": "widgets",
-    "icon": "🐠",
+    "icon": "location-alt",
     "description": "Display a map showing all posts with fish catches and coordinates.",
     "supports": {
         "html": false,

@@ -3,7 +3,6 @@
  * Plain JavaScript - no webpack compilation needed
  */
 
-console.log('LOADING: /frontend.js');
 
 (function() {
     'use strict';
@@ -16,8 +15,6 @@ console.log('LOADING: /frontend.js');
     }
 
     function initFishCatchBlocks() {
-        console.log('Fish Catch Block: Frontend script loaded');
-        console.log('Found blocks:', document.querySelectorAll('.fish-catch-block').length);
         
         // Initialize all fish catch blocks on the page
         document.querySelectorAll('.fish-catch-block').forEach(function(block) {
@@ -30,7 +27,6 @@ console.log('LOADING: /frontend.js');
     function initMap(block) {
         const mapContainer = block.querySelector('.map-container');
         if (!mapContainer) {
-            console.log('Fish Catch Block: No map container found');
             return;
         }
 
@@ -45,15 +41,8 @@ console.log('LOADING: /frontend.js');
         const locationName = mapContainer.dataset.location || 'Fishing Location';
         const mapStyle = mapContainer.dataset.mapStyle || mapContainer.getAttribute('data-map-style') || 'OpenStreetMap.Mapnik';
 
-        console.log('Fish Catch Block: Map data', { mapId, lat, lng, locationName, mapStyle });
-        console.log('Fish Catch Block: Raw map attributes', {
-            'dataset.mapStyle': mapContainer.dataset.mapStyle,
-            'getAttribute(data-map-style)': mapContainer.getAttribute('data-map-style'),
-            'all dataset': mapContainer.dataset
-        });
 
         if (isNaN(lat) || isNaN(lng)) {
-            console.log('Fish Catch Block: Invalid coordinates');
             return;
         }
 
@@ -123,9 +112,6 @@ console.log('LOADING: /frontend.js');
                             const clickedSrc = e.target.src;
                             const currentIndex = images.findIndex(img => img.url === clickedSrc);
                             
-                            console.log('Gallery click: found', images.length, 'images, current index:', currentIndex);
-                            console.log('Clicked src:', clickedSrc);
-                            console.log('Available URLs:', images.map(img => img.url));
                             openLightbox(images, currentIndex >= 0 ? currentIndex : 0);
                         } catch (error) {
                             console.error('Failed to parse media data:', error);
@@ -147,7 +133,6 @@ console.log('LOADING: /frontend.js');
 
     function openLightbox(images, currentIndex) {
         let currentImgIndex = currentIndex || 0;
-        console.log('Lightbox opened with', images.length, 'images');
         
         // Create overlay
         const overlay = document.createElement('div');

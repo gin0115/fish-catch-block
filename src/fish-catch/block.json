@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "title": "Fish Catch Block",
     "category": "widgets",
-    "icon": "🐟",
+    "icon": "pets",
     "description": "A simple fish catch block for displaying fishing information.",
     "supports": {
         "html": false,

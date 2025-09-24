@@ -6,7 +6,6 @@ import { __ } from '@wordpress/i18n';
 /**
  * React hook that is used to mark the block wrapper element.
  */
-console.log('LOADING: /src/fish-catch/save.js');
 import { useBlockProps } from '@wordpress/block-editor';
 
 /**

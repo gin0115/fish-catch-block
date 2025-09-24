@@ -2,7 +2,6 @@
  * Frontend JavaScript for Fish Catch Map Block
  */
 
-console.log('LOADING: /src/fish-catch-map/frontend.js');
 
 (function() {
     'use strict';
@@ -15,7 +14,6 @@ console.log('LOADING: /src/fish-catch-map/frontend.js');
     }
 
     function initFishCatchMaps() {
-        console.log('Fish Catch Map: Frontend script loaded');
         
         // Initialize all fish catch map blocks on the page
         document.querySelectorAll('.fish-catch-map-container').forEach(function(mapContainer) {
@@ -31,7 +29,6 @@ console.log('LOADING: /src/fish-catch-map/frontend.js');
         const showCatchCount = mapContainer.dataset.showCatchCount === '1';
         const mapStyle = mapContainer.dataset.mapStyle || 'OpenStreetMap.Mapnik';
 
-        console.log('Fish Catch Map: Initializing map', { mapId, minCatchCount, showPostTitles, showCatchCount, mapStyle });
 
         try {
             // Load Leaflet and providers if not already available
@@ -101,7 +98,6 @@ console.log('LOADING: /src/fish-catch-map/frontend.js');
                     });
             });
 
-            console.log(`Fish Catch Map: Added ${fishCatchData.length} markers to map`);
 
         } catch (error) {
             console.error('Fish Catch Map: Error initializing map:', error);
