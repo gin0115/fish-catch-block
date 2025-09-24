@@ -1,0 +1,357 @@
+/**
+ * Styles for Fish Catch Map block
+ * Applied both in the editor and on the frontend
+ */
+
+.wp-block-fish-catch-fish-catch-map {
+    margin: 20px 0;
+    .fish-catch-map-block {
+        h3 {
+            margin: 0 0 16px 0;
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e1e1e;
+        }
+        .no-data-message {
+            padding: 40px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            color: #666;
+            p {
+                margin: 8px 0;
+                &:first-child {
+                    font-weight: 500;
+                    color: #333;
+                }
+            }
+        }
+        .fish-catch-map-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: visible;
+            background-color: #f5f5f5;
+            position: relative;
+            // Leaflet map adjustments
+            .leaflet-container {
+                border-radius: 8px;
+            }
+            // Custom fish markers
+            .fish-catch-marker {
+                transition: all 0.2s ease;
+                &:hover {
+                    transform: scale(1.1);
+                }
+                .fish-marker {
+                    transition: all 0.2s ease;
+                    &:hover {
+                        transform: scale(1.05);
+                    }
+                }
+                .catch-count-badge {
+                    animation: pulse 2s infinite;
+                }
+            }
+            // Reveal panel
+            .fish-catch-reveal-panel {
+                position: static;
+                width: 100%;
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                overflow: hidden;
+                margin-top: 20px;
+                transform: translateY(20px);
+                opacity: 0;
+                animation: slideUp 0.4s ease forwards;
+                border: 1px solid rgba(0, 0, 0, 0.05);
+                @keyframes slideUp {
+                    from {
+                        transform: translateY(20px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+                .panel-header {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    padding: 12px 16px;
+                    position: relative;
+                    .panel-close {
+                        position: absolute;
+                        top: 8px;
+                        right: 12px;
+                        background: rgba(255, 255, 255, 0.2);
+                        border: none;
+                        color: white;
+                        font-size: 20px;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: background 0.2s ease;
+                        &:hover {
+                            background: rgba(255, 255, 255, 0.3);
+                        }
+                    }
+                }
+                .panel-content {
+                    max-height: 400px;
+                    overflow-y: auto;
+                    padding: 16px;
+                    .location-title {
+                        margin: 0 0 12px 0;
+                        font-size: 18px;
+                        a {
+                            color: #1e1e1e;
+                            text-decoration: none;
+                            &:hover {
+                                color: #007cba;
+                                text-decoration: underline;
+                            }
+                        }
+                    }
+                    .catch-count-display {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-bottom: 16px;
+                        padding: 12px;
+                        background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+                        border-radius: 8px;
+                        color: white;
+                        .catch-icon {
+                            font-size: 20px;
+                        }
+                        .count {
+                            font-size: 24px;
+                            font-weight: bold;
+                        }
+                        .label {
+                            font-size: 14px;
+                            opacity: 0.9;
+                        }
+                    }
+                    .location-images {
+                        margin-bottom: 16px;
+                        .images-grid {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 8px;
+                            .image-item {
+                                aspect-ratio: 1;
+                                overflow: hidden;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                img {
+                                    width: 100%;
+                                    height: 100%;
+                                    object-fit: cover;
+                                    transition: transform 0.2s ease;
+                                    &:hover {
+                                        transform: scale(1.05);
+                                    }
+                                }
+                            }
+                            .more-images {
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                background: #f5f5f5;
+                                border-radius: 6px;
+                                font-size: 14px;
+                                color: #666;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: background 0.2s ease;
+                                &:hover {
+                                    background: #e9ecef;
+                                }
+                            }
+                            .loading-images,
+                            .no-images {
+                                grid-column: 1 / -1;
+                                text-align: center;
+                                padding: 20px;
+                                color: #666;
+                                font-size: 14px;
+                            }
+                        }
+                    }
+                    .location-excerpt {
+                        margin-bottom: 16px;
+                        p {
+                            margin: 0;
+                            font-size: 14px;
+                            line-height: 1.5;
+                            color: #555;
+                        }
+                    }
+                    .location-meta {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        margin-bottom: 16px;
+                        padding: 12px;
+                        background: #f8f9fa;
+                        border-radius: 6px;
+                        .coordinates,
+                        .date {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            font-size: 13px;
+                            color: #666;
+                            .icon {
+                                width: 16px;
+                                text-align: center;
+                            }
+                        }
+                    }
+                    .panel-actions {
+                        .view-post-btn {
+                            display: block;
+                            width: 100%;
+                            padding: 12px;
+                            background: linear-gradient(135deg, #007cba, #0073aa);
+                            color: white;
+                            text-decoration: none;
+                            border-radius: 6px;
+                            text-align: center;
+                            font-weight: 500;
+                            transition: all 0.2s ease;
+                            &:hover {
+                                transform: translateY(-1px);
+                                box-shadow: 0 4px 12px rgba(0, 124, 186, 0.3);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Popup content styles
+.fish-catch-popup-content {
+    min-width: 200px;
+    h4 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        line-height: 1.3;
+        a {
+            color: #1e1e1e;
+            text-decoration: none;
+            &:hover {
+                color: #007cba;
+                text-decoration: underline;
+            }
+        }
+    }
+    p {
+        margin: 4px 0;
+        font-size: 13px;
+        line-height: 1.4;
+        &.catch-count {
+            color: #007cba;
+            font-weight: 500;
+        }
+        &.excerpt {
+            color: #555;
+            margin: 8px 0;
+        }
+        &.coordinates {
+            color: #666;
+            font-size: 11px;
+        }
+        &.date {
+            color: #999;
+            font-size: 11px;
+        }
+    }
+}
+
+// CSS Animations
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .wp-block-fish-catch-fish-catch-map {
+        .fish-catch-map-container {
+            min-height: 300px;
+            .fish-catch-reveal-panel {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: calc(100vw - 32px);
+                max-width: 400px;
+                max-height: calc(100vh - 32px);
+                animation: scaleIn 0.3s ease forwards;
+                @keyframes scaleIn {
+                    from {
+                        transform: translate(-50%, -50%) scale(0.9);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translate(-50%, -50%) scale(1);
+                        opacity: 1;
+                    }
+                }
+                .panel-content {
+                    max-height: calc(100vh - 120px);
+                    .location-images .images-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            }
+        }
+    }
+    .fish-catch-popup-content {
+        min-width: 180px;
+        h4 {
+            font-size: 14px;
+        }
+        p {
+            font-size: 12px;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .wp-block-fish-catch-fish-catch-map {
+        .fish-catch-map-container {
+            .fish-catch-reveal-panel {
+                width: calc(100vw - 16px);
+                .panel-content {
+                    padding: 12px;
+                    .location-images .images-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .catch-count-display {
+                        flex-direction: column;
+                        text-align: center;
+                        gap: 4px;
+                    }
+                }
+            }
+        }
+    }
+}

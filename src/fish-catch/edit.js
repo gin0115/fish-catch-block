@@ -34,6 +34,11 @@ import {
 import { useState, useEffect, useRef } from '@wordpress/element';
 
 /**
+ * WordPress data API for managing post meta.
+ */
+import { useSelect, useDispatch } from '@wordpress/data';
+
+/**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
  */
 import './editor.scss';
@@ -283,6 +288,13 @@ export default function Edit({ attributes, setAttributes }) {
 	const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 	const mapManagerRef = useRef(null);
 
+	// Get current post ID and meta management functions
+	const postId = useSelect((select) => {
+		return select('core/editor').getCurrentPostId();
+	}, []);
+
+	const { editPost } = useDispatch('core/editor');
+
 	const removeCatch = (index) => {
 		const updatedCatches = catches.filter((_, i) => i !== index);
 		setAttributes({ catches: updatedCatches });
@@ -409,6 +421,27 @@ export default function Edit({ attributes, setAttributes }) {
 			}
 		};
 	}, []);
+
+	// Save coordinates and fish count to post meta
+	useEffect(() => {
+		if (postId) {
+			const meta = {};
+			
+			// Save coordinates if available
+			if (latitude && longitude) {
+				meta.fish_catch_coordinates = {
+					latitude: parseFloat(latitude),
+					longitude: parseFloat(longitude)
+				};
+			}
+			
+			// Save total fish count
+			meta.fish_catch_total_count = catches.length;
+			
+			// Update post meta
+			editPost({ meta });
+		}
+	}, [postId, latitude, longitude, catches, editPost]);
 
 	return (
 		<>

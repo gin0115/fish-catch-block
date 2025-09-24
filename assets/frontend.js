@@ -115,115 +115,33 @@ console.log('LOADING: /frontend.js');
         // Create overlay
         const overlay = document.createElement('div');
         overlay.className = 'fish-catch-lightbox';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        `;
 
         // Create container
         const container = document.createElement('div');
-        container.style.cssText = `
-            position: relative;
-            max-width: 90%;
-            max-height: 90%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
+        container.className = 'lightbox-container';
 
         // Create image
         const img = document.createElement('img');
-        img.style.cssText = `
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-        `;
+        img.className = 'lightbox-image';
 
         // Create close button
         const closeBtn = document.createElement('button');
         closeBtn.innerHTML = '×';
-        closeBtn.style.cssText = `
-            position: absolute;
-            top: -50px;
-            right: 0;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            font-size: 30px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
+        closeBtn.className = 'lightbox-close';
 
         // Navigation buttons (if multiple images)
         let prevBtn, nextBtn, counter;
         if (images.length > 1) {
             prevBtn = document.createElement('button');
             prevBtn.innerHTML = '‹';
-            prevBtn.style.cssText = `
-                position: absolute;
-                left: -60px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                font-size: 30px;
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
+            prevBtn.className = 'lightbox-nav lightbox-prev';
 
             nextBtn = document.createElement('button');
             nextBtn.innerHTML = '›';
-            nextBtn.style.cssText = `
-                position: absolute;
-                right: -60px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                font-size: 30px;
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
+            nextBtn.className = 'lightbox-nav lightbox-next';
 
             counter = document.createElement('div');
-            counter.style.cssText = `
-                position: absolute;
-                bottom: -40px;
-                left: 50%;
-                transform: translateX(-50%);
-                color: white;
-                font-size: 14px;
-                background: rgba(0,0,0,0.5);
-                padding: 5px 10px;
-                border-radius: 15px;
-            `;
+            counter.className = 'lightbox-counter';
         }
 
         // Show image function
@@ -321,30 +239,13 @@ console.log('LOADING: /frontend.js');
                 // Update active button
                 toggle.querySelectorAll('.view-btn').forEach(function(btn) {
                     btn.classList.remove('active');
-                    btn.style.backgroundColor = 'transparent';
-                    btn.style.color = '#666';
                 });
                 e.target.classList.add('active');
-                e.target.style.backgroundColor = '#007cba';
-                e.target.style.color = 'white';
 
                 // Update grid layout
                 catchesGrid.className = 'catches-grid ' + e.target.dataset.view;
-                catchesGrid.style.gridTemplateColumns = isListView ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))';
 
-                // Show/hide appropriate content
-                catchesGrid.querySelectorAll('.catch-card').forEach(function(card) {
-                    const listContent = card.querySelector('.list-view-content');
-                    const gridContent = card.querySelector('.grid-view-content');
-
-                    if (isListView) {
-                        if (listContent) listContent.style.display = 'flex';
-                        if (gridContent) gridContent.style.display = 'none';
-                    } else {
-                        if (listContent) listContent.style.display = 'none';
-                        if (gridContent) gridContent.style.display = 'block';
-                    }
-                });
+                // The CSS handles show/hide for list vs grid content automatically
             }
         });
     }

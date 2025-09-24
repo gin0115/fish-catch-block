@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "fish-catch/fish-catch-map",
+    "version": "0.1.0",
+    "title": "Fish Catch Map",
+    "category": "widgets",
+    "icon": "location-alt",
+    "description": "Display a map showing all posts with fish catches and coordinates.",
+    "supports": {
+        "html": false,
+        "spacing": {
+            "padding": true,
+            "margin": true
+        }
+    },
+    "attributes": {
+        "mapHeight": {
+            "type": "number",
+            "default": 400
+        },
+        "minCatchCount": {
+            "type": "number",
+            "default": 1
+        },
+        "showPostTitles": {
+            "type": "boolean",
+            "default": true
+        },
+        "showCatchCount": {
+            "type": "boolean",
+            "default": true
+        },
+        "showImages": {
+            "type": "boolean",
+            "default": true
+        },
+        "mapZoom": {
+            "type": "number",
+            "default": 10
+        },
+        "mapStyle": {
+            "type": "string",
+            "default": "openstreetmap"
+        },
+        "markerStyle": {
+            "type": "string",
+            "default": "default"
+        },
+        "panelPosition": {
+            "type": "string",
+            "default": "side"
+        },
+        "panelWidth": {
+            "type": "number",
+            "default": 350
+        },
+        "showCoordinates": {
+            "type": "boolean",
+            "default": true
+        },
+        "showExcerpt": {
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "textdomain": "fish-catch",
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./index.css",
+    "style": "file:./style-index.css",
+    "viewScript": "file:./frontend.js"
+}

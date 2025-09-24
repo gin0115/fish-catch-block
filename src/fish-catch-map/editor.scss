@@ -1,0 +1,73 @@
+/**
+ * Editor-specific styles for Fish Catch Map block
+ */
+
+.wp-block-fish-catch-fish-catch-map {
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    padding: 16px;
+    .fish-catch-map-block {
+        h3 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: #1e1e1e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            &:before {
+                content: '🗺️';
+                font-size: 20px;
+            }
+        }
+        // Loading state
+        .fish-catch-map-container {
+            position: relative;
+            // Disable map interactions in editor
+            .leaflet-container {
+                pointer-events: none;
+            }
+            // Editor overlay to indicate this is a preview
+            &:after {
+                content: 'Preview - Map will be interactive on frontend';
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                z-index: 1000;
+            }
+        }
+        // Status messages in editor
+        .status-message {
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            &.loading {
+                background: #f0f6fc;
+                border: 1px solid #0073aa;
+                color: #0073aa;
+            }
+            &.no-data {
+                background: #fff8e5;
+                border: 1px solid #dba617;
+                color: #8a6914;
+            }
+        }
+    }
+}
+
+// Inspector controls styling
+.edit-post-sidebar .components-panel__body {
+    .fish-catch-map-settings {
+        .components-range-control__wrapper {
+            margin-bottom: 16px;
+        }
+        .components-toggle-control {
+            margin-bottom: 12px;
+        }
+    }
+}

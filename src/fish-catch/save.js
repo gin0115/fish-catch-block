@@ -44,47 +44,16 @@ export default function save({ attributes, className }) {
 		<div { ...blockProps } className="fish-catch-block">
 			{/* Location Section */}
 			{locationAddress && (
-				<div className="location-section" style={{ marginBottom: '24px' }}>
-					<h3 style={{ 
-						margin: '0 0 12px 0', 
-						fontSize: '18px', 
-						fontWeight: 'bold',
-						color: '#1e1e1e'
-					}}>
+				<div className="location-section">
+					<h3>
 						📍 {locationAddress}
 					</h3>
 					{latitude && longitude && (
-						<div style={{ 
-							margin: '8px 0 0 0',
-							display: 'flex',
-							flexWrap: 'wrap',
-							gap: '8px'
-						}}>
+						<div className="location-links">
 							<a 
 								href={`https://www.google.com/maps?q=${latitude},${longitude}`}
 								target="_blank"
 								rel="noopener noreferrer"
-								style={{
-									display: 'inline-flex',
-									alignItems: 'center',
-									gap: '4px',
-									padding: '4px 8px',
-									backgroundColor: '#f0f0f0',
-									borderRadius: '4px',
-									textDecoration: 'none',
-									fontSize: '12px',
-									color: '#333',
-									border: '1px solid #ddd',
-									transition: 'all 0.2s ease'
-								}}
-								onMouseOver={(e) => {
-									e.target.style.backgroundColor = '#e0e0e0';
-									e.target.style.transform = 'translateY(-1px)';
-								}}
-								onMouseOut={(e) => {
-									e.target.style.backgroundColor = '#f0f0f0';
-									e.target.style.transform = 'translateY(0)';
-								}}
 							>
 								🗺️ Google Maps
 							</a>
@@ -207,19 +176,13 @@ export default function save({ attributes, className }) {
 
 			{/* Map Section */}
 			{latitude && longitude && (
-				<div className="map-section" style={{ marginBottom: '32px' }}>
+				<div className="map-section">
 					<div 
 						id={mapId}
 						data-lat={latitude}
 						data-lng={longitude}
 						data-location={locationAddress || 'Fishing Location'}
-						style={{ 
-							height: '300px', 
-							width: '100%', 
-							borderRadius: '8px',
-							border: '1px solid #ddd',
-							backgroundColor: '#f5f5f5'
-						}}
+						className="map-container"
 					></div>
 				</div>
 			)}

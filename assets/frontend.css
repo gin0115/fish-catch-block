@@ -1,0 +1,325 @@
+/**
+ * Frontend CSS for Fish Catch Block
+ * Styles for lightbox, view toggles, and interactive elements
+ */
+
+
+/* Lightbox styles */
+
+.fish-catch-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.fish-catch-lightbox .lightbox-container {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fish-catch-lightbox .lightbox-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.fish-catch-lightbox .lightbox-close {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 30px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.fish-catch-lightbox .lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.fish-catch-lightbox .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.fish-catch-lightbox .lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.fish-catch-lightbox .lightbox-prev {
+    left: -60px;
+}
+
+.fish-catch-lightbox .lightbox-next {
+    right: -60px;
+}
+
+.fish-catch-lightbox .lightbox-counter {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 15px;
+}
+
+
+/* View toggle styles */
+
+.view-btn {
+    padding: 6px 12px;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.view-btn:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.view-btn:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.view-btn.active {
+    background-color: #007cba !important;
+    color: white !important;
+    border-color: #007cba;
+}
+
+.view-btn:hover:not(.active) {
+    background-color: #f0f0f0;
+}
+
+
+/* Grid view styles */
+
+.catches-grid.grid-view {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+}
+
+.catches-grid.list-view {
+    grid-template-columns: 1fr !important;
+}
+
+.catches-grid .catch-card .list-view-content {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.catches-grid.grid-view .catch-card .list-view-content {
+    display: none !important;
+}
+
+.catches-grid.list-view .catch-card .list-view-content {
+    display: flex !important;
+}
+
+.catches-grid.grid-view .catch-card .grid-view-content {
+    display: block !important;
+}
+
+.catches-grid.list-view .catch-card .grid-view-content {
+    display: none !important;
+}
+
+
+/* Responsive lightbox */
+
+@media (max-width: 768px) {
+    .fish-catch-lightbox .lightbox-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 24px;
+    }
+    .fish-catch-lightbox .lightbox-prev {
+        left: -50px;
+    }
+    .fish-catch-lightbox .lightbox-next {
+        right: -50px;
+    }
+    .fish-catch-lightbox .lightbox-close {
+        top: -40px;
+        width: 35px;
+        height: 35px;
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .fish-catch-lightbox .lightbox-nav {
+        position: fixed;
+        top: auto;
+        bottom: 20px;
+        transform: none;
+    }
+    .fish-catch-lightbox .lightbox-prev {
+        left: 20px;
+    }
+    .fish-catch-lightbox .lightbox-next {
+        right: 20px;
+    }
+    .fish-catch-lightbox .lightbox-close {
+        top: 20px;
+        right: 20px;
+    }
+    .fish-catch-lightbox .lightbox-counter {
+        bottom: 80px;
+    }
+}
+
+
+/* Fish Catch Map Reveal Panel - Simple & Clean */
+
+.fish-catch-reveal-panel {
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 8px;
+    border: 1px solid #ddd;
+    transform: translateY(5px);
+    opacity: 0;
+    animation: slideUpPanel 0.2s ease forwards;
+    min-height: 80px;
+    overflow: hidden;
+    position: relative;
+}
+
+@keyframes slideUpPanel {
+    from {
+        transform: translateY(5px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.fish-catch-reveal-panel .panel-close {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 14px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.fish-catch-reveal-panel .panel-close:hover {
+    color: #666;
+}
+
+.fish-catch-reveal-panel .panel-content {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 50px;
+}
+
+.fish-catch-reveal-panel .post-date {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 80px;
+}
+
+.fish-catch-reveal-panel .location-title {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fish-catch-reveal-panel .location-title a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.fish-catch-reveal-panel .location-title a:hover {
+    color: #007cba;
+}
+
+.fish-catch-reveal-panel .catch-count {
+    background: #ff6b6b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.fish-catch-reveal-panel .view-link {
+    background: #007cba;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+
+.fish-catch-reveal-panel .view-link:hover {
+    background: #005a8b;
+}
