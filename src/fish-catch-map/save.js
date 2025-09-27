@@ -22,6 +22,7 @@ export default function save({ attributes }) {
         <div {...useBlockProps.save()}>
             <div className="fish-catch-map-block">
                 <div
+                    id="fish-catch-map"
                     className="fish-catch-map-container"
                     data-height={mapHeight}
                     data-min-catch-count={minCatchCount}

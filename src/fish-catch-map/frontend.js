@@ -14,7 +14,6 @@
     }
 
     function initFishCatchMaps() {
-        
         // Initialize all fish catch map blocks on the page
         document.querySelectorAll('.fish-catch-map-container').forEach(function(mapContainer) {
             initMap(mapContainer);
@@ -22,7 +21,9 @@
     }
 
     async function initMap(mapContainer) {
+        
         const mapId = mapContainer.id;
+        
         const mapHeight = parseInt(mapContainer.dataset.height) || 400;
         const minCatchCount = parseInt(mapContainer.dataset.minCatchCount) || 1;
         const showPostTitles = mapContainer.dataset.showPostTitles === '1';
@@ -246,34 +247,7 @@
         
         
         panel.innerHTML = panelContent;
-        
-        // Add backdrop for mobile
-        const backdrop = document.createElement('div');
-        backdrop.className = 'fish-catch-panel-backdrop';
-        backdrop.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            display: none;
-        `;
-        
-        // Show backdrop on mobile
-        if (window.innerWidth <= 768) {
-            backdrop.style.display = 'block';
-            document.body.appendChild(backdrop);
-            setTimeout(() => backdrop.style.opacity = '1', 10);
-            
-            backdrop.addEventListener('click', function() {
-                panel.remove();
-                backdrop.remove();
-            });
-        }
+
 
         // Add panel after the map container
         const mapContainer = document.querySelector('.fish-catch-map-container');
