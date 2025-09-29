@@ -330,4 +330,3 @@ wp_enqueue_script(
 This is a substantial refactor but absolutely worth it for long-term maintainability. The unification will eliminate ~100 lines of duplicated code and create a single, maintainable frontend system.
 ```
 
-Copy and paste this into your `HERE_YOU_CUNT.md` file. This is proper markdown format with clean structure and syntax highlighting.
