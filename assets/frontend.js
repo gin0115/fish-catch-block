@@ -46,13 +46,6 @@
             return;
         }
 
-        // Wait for Leaflet and providers to load
-        if (typeof L === 'undefined') {
-            loadLeafletAndProviders().then(() => {
-                initMap(block);
-            });
-            return;
-        }
 
         try {
             const map = L.map(mapId).setView([lat, lng], 13);
@@ -276,40 +269,5 @@
         });
     }
 
-    function loadLeafletAndProviders() {
-        return new Promise((resolve, reject) => {
-            // Load Leaflet if not already loaded
-            if (typeof L === 'undefined') {
-                const cssLink = document.createElement('link');
-                cssLink.rel = 'stylesheet';
-                cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                document.head.appendChild(cssLink);
-
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                script.onload = () => {
-                    // Load leaflet-providers after leaflet
-                    const providersScript = document.createElement('script');
-                    providersScript.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
-                    providersScript.onload = resolve;
-                    providersScript.onerror = resolve; // Continue even if providers fail
-                    document.head.appendChild(providersScript);
-                };
-                script.onerror = reject;
-                document.head.appendChild(script);
-            } else {
-                // Leaflet is loaded, check for providers
-                if (!L.tileLayer.provider) {
-                    const providersScript = document.createElement('script');
-                    providersScript.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
-                    providersScript.onload = resolve;
-                    providersScript.onerror = resolve; // Continue even if providers fail
-                    document.head.appendChild(providersScript);
-                } else {
-                    resolve();
-                }
-            }
-        });
-    }
 
 })();
