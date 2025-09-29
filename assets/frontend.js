@@ -86,9 +86,7 @@
             }
             tileLayer.addTo(map);
 
-            L.marker([lat, lng]).addTo(map)
-                .bindPopup(locationName)
-                .openPopup();
+            L.marker([lat, lng]).addTo(map);
         } catch (error) {
             console.error('Failed to initialize map:', error);
         }
@@ -107,6 +105,7 @@
                         try {
                             const allMedia = JSON.parse(mediaData);
                             const images = allMedia.filter(item => item.mime && item.mime.startsWith('image/'));
+                            console.log('Parsed media data:', images); // Debug log
                             
                             // Find current index by matching the clicked image URL
                             const clickedSrc = e.target.src;

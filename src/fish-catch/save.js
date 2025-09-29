@@ -25,17 +25,27 @@ export default function save({ attributes, className }) {
 		return species.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
 	};
 
-	// Helper function to get image size based on setting
-	const getImageSize = (size) => {
-		const sizes = {
-			small: { list: '40px', grid: '60px', gallery: '60px' },
-			medium: { list: '60px', grid: '80px', gallery: '80px' },
-			large: { list: '80px', grid: '100px', gallery: '100px' }
-		};
-		return sizes[size] || sizes.medium;
+	// Helper function to get the appropriate image URL for different views
+	const getImageUrl = (mediaItem, viewType) => {
+		if (!mediaItem || !mediaItem.sizes) return mediaItem?.url || '';
+		
+		const sizes = mediaItem.sizes;
+		
+		switch (viewType) {
+			case 'list':
+				// Use fish-catch-thumb or fallback to thumbnail
+				return sizes['fish-catch-thumb']?.url || sizes.thumbnail?.url || mediaItem.url;
+			case 'grid':
+				// Use fish-catch-grid or fallback to medium
+				return sizes['fish-catch-grid']?.url || sizes.medium?.url || mediaItem.url;
+			case 'lightbox':
+				// Use full size for lightbox
+				return sizes.full?.url || mediaItem.url;
+			default:
+				return mediaItem.url;
+		}
 	};
-
-	const imageSizes = getImageSize(imageSize);
+console.log('Rendering catches:', catches); // Debug log
 
 	return (
 		<div { ...blockProps } className="fish-catch-block">
@@ -127,6 +137,8 @@ export default function save({ attributes, className }) {
 					
 					<div className={`catches-grid ${defaultView}-view`}>
 						{catches.map((catchItem, index) => (
+							// Console log to debug catchItem data
+							console.log('Rendering catch item:', catchItem),
 							<div 
 								key={index} 
 								className="catch-card" 
@@ -140,108 +152,53 @@ export default function save({ attributes, className }) {
 								<div className={`list-view-content ${defaultView === 'list' ? 'show' : 'hide'}`}>
 									{/* Compact Media */}
 									{catchItem.media && catchItem.media.length > 0 ? (
-										<div style={{ flexShrink: 0 }}>
+										<div className="compact-media">
 											<div 
-												className="catch-media-gallery" 
+												className="catch-media-gallery catch-media-gallery-list" 
 												data-media={JSON.stringify(catchItem.media.map(item => {
 													const actualMedia = Array.isArray(item) ? item[0] : item;
 													return {
-														url: actualMedia.url,
+														url: getImageUrl(actualMedia, 'lightbox'),
 														alt: actualMedia.alt || `Catch photo`,
 														mime: actualMedia.mime
 													};
 												}))}
-												style={{ 
-													width: imageSizes.list,
-													height: imageSizes.list,
-													position: 'relative',
-													overflow: 'hidden',
-													borderRadius: '6px',
-													cursor: 'pointer',
-													backgroundColor: '#f0f0f0'
-												}}
 											>
 												{(() => {
 													const firstMedia = Array.isArray(catchItem.media[0]) ? catchItem.media[0][0] : catchItem.media[0];
 													return firstMedia.mime && firstMedia.mime.startsWith('image/') ? (
 														<img 
-															src={firstMedia.url} 
+															src={getImageUrl(firstMedia, 'list')} 
 															alt={firstMedia.alt || `Catch photo`}
-															style={{ 
-																width: '100%', 
-																height: '100%', 
-																objectFit: 'cover'
-															}}
+															className="catch-image catch-image-list"
 														/>
 													) : (
 														<video 
 															src={firstMedia.url} 
-															style={{ 
-																width: '100%', 
-																height: '100%', 
-																objectFit: 'cover'
-															}}
 														/>
 													);
 												})()}
 												{catchItem.media.length > 1 && (
-													<div style={{
-														position: 'absolute',
-														bottom: '2px',
-														right: '2px',
-														backgroundColor: 'rgba(0, 0, 0, 0.7)',
-														color: 'white',
-														fontSize: '10px',
-														fontWeight: 'bold',
-														padding: '1px 4px',
-														borderRadius: '2px'
-													}}>
+													<div className="catch-media-overlay">
 														+{catchItem.media.length - 1}
 													</div>
 												)}
 											</div>
 										</div>
 									) : (
-										<div style={{ 
-											flexShrink: 0,
-											width: imageSizes.list,
-											height: imageSizes.list,
-											backgroundColor: '#e0e0e0',
-											borderRadius: '6px',
-											display: 'flex',
-											alignItems: 'center',
-											justifyContent: 'center',
-											fontSize: '18px',
-											fontWeight: 'bold',
-											color: '#666'
-										}}>
+										<div className="catch-media-placeholder catch-media-placeholder-list">
 											{getFishInitials(catchItem.species)}
 										</div>
 									)}
 
 									{/* Content */}
-									<div style={{ flex: 1, minWidth: 0 }}>
-										<div style={{ 
-											display: 'flex', 
-											alignItems: 'center', 
-											gap: '8px',
-											marginBottom: catchItem.comments ? '4px' : '0',
-											flexWrap: 'wrap'
-										}}>
-											<h4 style={{ 
-												margin: '0', 
-												fontSize: '16px', 
-												fontWeight: 'bold',
-												color: '#1e1e1e'
-											}}>
+									<div className="catch-content">
+										<div className={`catch-header ${catchItem.comments ? 'with-comments' : 'no-comments'}`}>
+											<h4 className="catch-title">
 												{catchItem.species || __( 'Unknown Species', 'fish-catch' )}
 											</h4>
 											{(catchItem.size || catchItem.weight) && (
-												<span style={{ 
-													fontSize: '14px', 
-													color: '#666',
-													fontWeight: '500'
-												}}>
+												<span className="catch-measurements">
 													({[
 														catchItem.size && `${catchItem.size}${sizeUnit || 'cm'}`,
 														catchItem.weight && `${catchItem.weight}${weightUnit || 'kg'}`
@@ -250,13 +207,7 @@ export default function save({ attributes, className }) {
 											)}
 										</div>
 										{catchItem.comments && (
-											<p style={{ 
-												margin: '0', 
-												fontSize: '13px', 
-												color: '#555',
-												fontStyle: 'italic',
-												lineHeight: '1.3'
-											}}>
+											<p className="catch-comments">
 												"{catchItem.comments}"
 											</p>
 										)}
@@ -266,22 +217,12 @@ export default function save({ attributes, className }) {
 								{/* Grid View Layout */}
 								<div className={`grid-view-content ${defaultView === 'grid' ? 'show' : 'hide'}`}>
 									{/* Grid Header */}
-									<div style={{ marginBottom: '12px' }}>
-										<h4 style={{ 
-											margin: '0 0 8px 0', 
-											fontSize: '16px', 
-											fontWeight: 'bold',
-											color: '#1e1e1e'
-										}}>
+									<div className="grid-header">
+										<h4 className="catch-title">
 											{catchItem.species || __( 'Unknown Species', 'fish-catch' )}
 										</h4>
 										{(catchItem.size || catchItem.weight) && (
-											<p style={{ 
-												margin: '0 0 8px 0', 
-												fontSize: '14px', 
-												color: '#666',
-												fontWeight: '500'
-											}}>
+											<p className="catch-measurements">
 												{[
 													catchItem.size && `${catchItem.size}${sizeUnit || 'cm'}`,
 													catchItem.weight && `${catchItem.weight}${weightUnit || 'kg'}`
@@ -289,116 +230,52 @@ export default function save({ attributes, className }) {
 											</p>
 										)}
 										{catchItem.comments && (
-											<p style={{ 
-												margin: '0', 
-												fontSize: '13px', 
-												color: '#555',
-												fontStyle: 'italic',
-												lineHeight: '1.4'
-											}}>
+											<p className="catch-comments">
 												"{catchItem.comments}"
 											</p>
 										)}
 									</div>
 
-									{/* Grid Media */}
+									{/* Grid Media - Show only first image */}
 									{catchItem.media && catchItem.media.length > 0 ? (
 										<div 
-											className="catch-media-gallery" 
+											className="catch-media-gallery catch-media-gallery-grid" 
 											data-media={JSON.stringify(catchItem.media.map(item => {
 												const actualMedia = Array.isArray(item) ? item[0] : item;
 												return {
-													url: actualMedia.url,
+													url: getImageUrl(actualMedia, 'lightbox'),
 													alt: actualMedia.alt || `Catch photo`,
 													mime: actualMedia.mime
 												};
 											}))}
-											style={{ 
-												display: 'grid', 
-												gridTemplateColumns: `repeat(auto-fit, minmax(${imageSizes.gallery}, 1fr))`,
-												gap: '8px',
-												marginTop: '12px'
-											}}
 										>
-											{catchItem.media.map((mediaItem, mediaIndex) => {
-												const actualMedia = Array.isArray(mediaItem) ? mediaItem[0] : mediaItem;
-												return (
-													<div 
-														key={mediaIndex}
-														style={{ 
-															position: 'relative',
-															aspectRatio: '1',
-															overflow: 'hidden',
-															borderRadius: '6px',
-															cursor: 'pointer',
-															backgroundColor: '#f0f0f0'
-														}}
-													>
-														{actualMedia.mime && actualMedia.mime.startsWith('image/') ? (
-															<img 
-																src={actualMedia.url} 
-																alt={actualMedia.alt || `Catch photo ${mediaIndex + 1}`}
-																style={{ 
-																	width: '100%', 
-																	height: '100%', 
-																	objectFit: 'cover',
-																	transition: 'transform 0.2s ease'
-																}}
-															/>
-														) : (
-															<video 
-																src={actualMedia.url} 
-																style={{ 
-																	width: '100%', 
-																	height: '100%', 
-																	objectFit: 'cover'
-																}}
-																controls
-															/>
-														)}
-														{catchItem.media.length > 1 && mediaIndex === 0 && (
-															<div style={{
-																position: 'absolute',
-																bottom: '4px',
-																right: '4px',
-																backgroundColor: 'rgba(0, 0, 0, 0.7)',
-																color: 'white',
-																fontSize: '11px',
-																fontWeight: 'bold',
-																padding: '2px 6px',
-																borderRadius: '3px'
-															}}>
-																+{catchItem.media.length - 1}
-															</div>
-														)}
-													</div>
+											{(() => {
+												const firstMedia = Array.isArray(catchItem.media[0]) ? catchItem.media[0][0] : catchItem.media[0];
+												return firstMedia.mime && firstMedia.mime.startsWith('image/') ? (
+													<img 
+														src={getImageUrl(firstMedia, 'grid')} 
+														alt={firstMedia.alt || `Catch photo`}
+														className="catch-image catch-image-grid"
+													/>
+												) : (
+													<video 
+														src={firstMedia.url} 
+														controls
+													/>
 												);
-											})}
+											})()}
+											{catchItem.media.length > 1 && (
+												<div className="catch-media-overlay catch-media-overlay-grid">
+													+{catchItem.media.length - 1}
+												</div>
+											)}
 										</div>
 									) : (
-										<div style={{
-											width: '100%',
-											height: '120px',
-											backgroundColor: '#e0e0e0',
-											borderRadius: '8px',
-											display: 'flex',
-											flexDirection: 'column',
-											alignItems: 'center',
-											justifyContent: 'center',
-											marginTop: '12px'
-										}}>
-											<div style={{
-												fontSize: '24px',
-												fontWeight: 'bold',
-												color: '#666',
-												marginBottom: '4px'
-											}}>
+										<div className="no-media-placeholder">
+											<div className="no-media-initials">
 												{getFishInitials(catchItem.species)}
 											</div>
-											<div style={{
-												fontSize: '12px',
-												color: '#999'
-											}}>
+											<div className="no-media-text">
 												No photos
 											</div>
 										</div>
@@ -412,13 +289,8 @@ export default function save({ attributes, className }) {
 
 			{/* No catches message */}
 			{(!catches || catches.length === 0) && (
-				<div style={{ 
-					textAlign: 'center', 
-					padding: '40px 20px',
-					color: '#666',
-					fontStyle: 'italic'
-				}}>
-					<p style={{ margin: '0', fontSize: '16px' }}>
+				<div className="no-catches">
+					<p>
 						{__( 'No fish caught yet. Add your first catch!', 'fish-catch' )}
 					</p>
 				</div>
