@@ -2,15 +2,15 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { 
-    useBlockProps, 
-    InspectorControls 
+import {
+    useBlockProps,
+    InspectorControls
 } from '@wordpress/block-editor';
-import { 
-    PanelBody, 
+import {
+    PanelBody,
     RangeControl,
     ToggleControl,
-    SelectControl 
+    SelectControl
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useRef } from '@wordpress/element';
@@ -30,22 +30,22 @@ import { getMapTemplateOptions } from '../shared/map-templates';
  * Edit component for Fish Catch Map block
  */
 export default function Edit({ attributes, setAttributes }) {
-    const { 
-        mapHeight, 
-        minCatchCount, 
-        showPostTitles, 
+    const {
+        mapHeight,
+        minCatchCount,
+        showPostTitles,
         showCatchCount,
         mapZoom,
-        mapStyle 
+        mapStyle
     } = attributes;
-    
+
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
 
     // Query posts with fish catch data
     const fishCatchPosts = useSelect((select) => {
         const { getEntityRecords } = select('core');
-        
+
         return getEntityRecords('postType', 'post', {
             fish_catch_min_count: minCatchCount,
             fish_catch_has_coords: true,
@@ -60,7 +60,7 @@ export default function Edit({ attributes, setAttributes }) {
             const fishCatchMeta = post.fish_catch_meta;
             const coordinates = fishCatchMeta?.coordinates;
             const totalCount = fishCatchMeta?.total_count || 0;
-            
+
             if (coordinates && coordinates.latitude && coordinates.longitude) {
                 return {
                     id: post.id,
@@ -80,23 +80,18 @@ export default function Edit({ attributes, setAttributes }) {
     useEffect(() => {
         if (!mapRef.current || mapData.length === 0) return;
 
-        // Load Leaflet and providers if not already loaded
+        // Wait for Leaflet to be available (enqueued by WordPress)
         if (typeof window.L === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = () => {
-                // Load leaflet-providers after leaflet
-                const providersScript = document.createElement('script');
-                providersScript.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
-                providersScript.onload = initializeMap;
-                document.head.appendChild(providersScript);
+            // If Leaflet isn't available yet, wait a bit and try again
+            const checkLeaflet = () => {
+                if (typeof window.L !== 'undefined') {
+                    console.log('Leaflet is available');    
+                    initializeMap();
+                } else {
+                    setTimeout(checkLeaflet, 100);
+                }
             };
-            document.head.appendChild(script);
-
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            document.head.appendChild(link);
+            checkLeaflet();
         } else {
             initializeMap();
         }
@@ -113,7 +108,7 @@ export default function Edit({ attributes, setAttributes }) {
 
             const map = window.L.map(mapRef.current, {
                 scrollWheelZoom: false
-            }).fitBounds(bounds, { 
+            }).fitBounds(bounds, {
                 padding: [20, 20],
                 maxZoom: 13
             });
@@ -124,15 +119,15 @@ export default function Edit({ attributes, setAttributes }) {
                 try {
                     // Handle API key authentication for different providers
                     let providerOptions = {};
-                    
+
                     if (mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
                         providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
                     }
-                    
+
                     if (mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
                         providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
                     }
-                    
+
                     tileLayer = window.L.tileLayer.provider(mapStyle, providerOptions);
                 } catch (e) {
                     // Fallback to OpenStreetMap if provider fails
@@ -202,7 +197,7 @@ export default function Edit({ attributes, setAttributes }) {
                         help={__('Only show posts with this many catches or more', 'fish-catch')}
                     />
                 </PanelBody>
-                
+
                 <PanelBody title={__('Display Options', 'fish-catch')}>
                     <ToggleControl
                         label={__('Show Post Titles', 'fish-catch')}
@@ -220,7 +215,7 @@ export default function Edit({ attributes, setAttributes }) {
             <div {...useBlockProps()}>
                 <div className="fish-catch-map-block">
                     <h3>{__('Fish Catch Map', 'fish-catch')}</h3>
-                    
+
                     {fishCatchPosts === null ? (
                         <p>{__('Loading fishing locations...', 'fish-catch')}</p>
                     ) : mapData.length === 0 ? (
@@ -235,9 +230,9 @@ export default function Edit({ attributes, setAttributes }) {
                             <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>
                                 {__('Found', 'fish-catch')} {mapData.length} {__('fishing locations', 'fish-catch')}
                             </p>
-                            <div 
+                            <div
                                 ref={mapRef}
-                                style={{ 
+                                style={{
                                     height: `${mapHeight}px`,
                                     border: '1px solid #ddd',
                                     borderRadius: '8px',

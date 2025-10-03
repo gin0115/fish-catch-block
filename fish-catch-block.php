@@ -103,10 +103,11 @@ add_filter( 'image_size_names_choose', 'fish_catch_block_add_image_size_names' )
 function fish_catch_block_frontend_assets() {
 
 		// Enqueue frontend script for map and gallery functionality
+		// Now with proper dependencies on Leaflet
 		wp_enqueue_script(
 			'fish-catch-block-frontend',
 			plugin_dir_url( __FILE__ ) . 'assets/frontend.js',
-			array(),
+			array( 'leaflet-js', 'leaflet-providers-js' ),
 			'1.0.0',
 			true
 		);
@@ -271,6 +272,31 @@ add_action( 'init', 'fish_catch_block_init' );
  * @return void
  */
 function fish_catch_block_editor_assets() {
+	// Enqueue Leaflet for editor maps
+	wp_enqueue_style(
+		'leaflet-css',
+		'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+		array(),
+		'1.9.4'
+	);
+
+	wp_enqueue_script(
+		'leaflet-js',
+		'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+		array(),
+		'1.9.4',
+		true
+	);
+
+	// Enqueue Leaflet Providers for map themes
+	wp_enqueue_script(
+		'leaflet-providers-js',
+		'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js',
+		array( 'leaflet-js' ),
+		'2.0.0',
+		true
+	);
+
 	$api_config = array(
 		'thunderforestApiKey' => sanitize_text_field( get_option( 'fish_catch_thunderforest_api_key', '' ) ),
 		'jawgAccessToken'     => sanitize_text_field( get_option( 'fish_catch_jawg_access_token', '' ) ),

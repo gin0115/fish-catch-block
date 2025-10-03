@@ -87,31 +87,30 @@ class MapManager {
 			return Promise.resolve();
 		}
 
+		// Wait for Leaflet to be available (enqueued by WordPress)
 		return new Promise((resolve, reject) => {
-			// Load CSS
-			const cssLink = document.createElement('link');
-			cssLink.rel = 'stylesheet';
-			cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-			cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-			cssLink.crossOrigin = '';
-			document.head.appendChild(cssLink);
-
-			// Load JS
-			const script = document.createElement('script');
-			script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-			script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-			script.crossOrigin = '';
-			
-			script.onload = () => {
-				this.isLeafletLoaded = true;
-				resolve();
+			const checkLeaflet = () => {
+				if (typeof window.L !== 'undefined') {
+					this.isLeafletLoaded = true;
+					resolve();
+				} else {
+					setTimeout(checkLeaflet, 100);
+				}
 			};
 			
-			script.onerror = () => {
-				reject(new Error('Failed to load Leaflet'));
-			};
+			// Set a timeout to avoid infinite waiting
+			const timeout = setTimeout(() => {
+				reject(new Error('Leaflet failed to load within timeout'));
+			}, 10000);
 			
-			document.head.appendChild(script);
+			checkLeaflet();
+			
+			// Clear timeout if Leaflet loads successfully
+			const originalResolve = resolve;
+			resolve = () => {
+				clearTimeout(timeout);
+				originalResolve();
+			};
 		});
 	}
 
