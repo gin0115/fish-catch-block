@@ -105,6 +105,7 @@ console.log('Rendering catches:', catches); // Debug log
 					data-lng={longitude} 
 					data-location={locationAddress || 'Fishing Location'} 
 					data-map-style={mapStyle || 'OpenStreetMap.Mapnik'}
+					data-catchcount={catches ? catches.length : 0}
 					className="map-container"
 				></div>
 				</div>
