@@ -67,6 +67,10 @@
         "mapStyle": {
             "type": "string",
             "default": "OpenStreetMap.Mapnik"
+        },
+        "mapHeight": {
+            "type": "number",
+            "default": 400
         }
     },
     "textdomain": "fish-catch",

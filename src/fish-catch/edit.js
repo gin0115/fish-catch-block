@@ -23,7 +23,8 @@ import {
 	Button,
 	Modal,
 	SelectControl,
-	ColorPicker
+	ColorPicker,
+	RangeControl
 } from '@wordpress/components';
 
 
@@ -42,6 +43,13 @@ import { useSelect, useDispatch } from '@wordpress/data';
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
  */
 import './editor.scss';
+
+/**
+ * Shared map template configuration
+ */
+import { getMapTemplateOptions } from '../shared/map-templates';
+
+
 
 /**
  * MapManager - Utility class for handling interactive maps
@@ -153,6 +161,7 @@ class MapManager {
 	 * Update map style
 	 */
 	updateMapStyle() {
+		console.log('MapManager updateMapStyle called with mapStyle:', this.mapStyle);
 		// Remove existing tile layer
 		if (this.tileLayer) {
 			this.map.removeLayer(this.tileLayer);
@@ -194,6 +203,7 @@ class MapManager {
 	 * Set map style
 	 */
 	setMapStyle(mapStyle) {
+		console.log('MapManager setMapStyle called with:', mapStyle);
 		this.mapStyle = mapStyle;
 		this.updateMapStyle();
 	}
@@ -321,7 +331,7 @@ class MapManager {
  * editor. This represents what the editor will render when the block is used.
  */
 export default function Edit({ attributes, setAttributes }) {
-	const { locationAddress, latitude, longitude, catches, sizeUnit, weightUnit, defaultView, cardBackgroundColor, cardBorderColor, cardBorderRadius, imageSize, mapStyle } = attributes;
+	const { locationAddress, latitude, longitude, catches, sizeUnit, weightUnit, defaultView, cardBackgroundColor, cardBorderColor, cardBorderRadius, imageSize, mapStyle, mapHeight } = attributes;
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [editingIndex, setEditingIndex] = useState(null);
 	const [newCatch, setNewCatch] = useState({
@@ -442,6 +452,9 @@ export default function Edit({ attributes, setAttributes }) {
 					}
 				});
 				
+				// Debug: Log the map style being used
+				console.log('MapManager initialized with style:', mapStyle || 'OpenStreetMap.Mapnik');
+				
 				mapManagerRef.current.initMap();
 				
 				// Set existing location if available
@@ -450,6 +463,13 @@ export default function Edit({ attributes, setAttributes }) {
 						mapManagerRef.current.setExistingLocation(latitude, longitude);
 					}, 500);
 				}
+				
+				// Ensure map style is applied after initialization
+				setTimeout(() => {
+					if (mapManagerRef.current && mapStyle) {
+						mapManagerRef.current.setMapStyle(mapStyle);
+					}
+				}, 600);
 			}, 100);
 		}
 
@@ -464,7 +484,10 @@ export default function Edit({ attributes, setAttributes }) {
 	// Map style update effect
 	useEffect(() => {
 		if (mapManagerRef.current && mapStyle) {
-			mapManagerRef.current.setMapStyle(mapStyle);
+			// Small delay to ensure map is fully loaded
+			setTimeout(() => {
+				mapManagerRef.current.setMapStyle(mapStyle);
+			}, 100);
 		}
 	}, [mapStyle]);
 
@@ -654,32 +677,17 @@ export default function Edit({ attributes, setAttributes }) {
 						label={__('Map Style', 'fish-catch')}
 						value={mapStyle}
 						onChange={(value) => setAttributes({ mapStyle: value })}
-						options={[
-							{ label: __('OpenStreetMap', 'fish-catch'), value: 'OpenStreetMap.Mapnik' },
-							{ label: __('Satellite (Esri)', 'fish-catch'), value: 'Esri.WorldImagery' },
-							{ label: __('Terrain (Stamen)', 'fish-catch'), value: 'Stamen.Terrain' },
-							{ label: __('Watercolor (Stamen)', 'fish-catch'), value: 'Stamen.Watercolor' },
-							{ label: __('Toner (Stamen)', 'fish-catch'), value: 'Stamen.Toner' },
-							{ label: __('CartoDB Positron', 'fish-catch'), value: 'CartoDB.Positron' },
-							{ label: __('CartoDB Dark Matter', 'fish-catch'), value: 'CartoDB.DarkMatter' },
-							{ label: __('OpenTopoMap', 'fish-catch'), value: 'OpenTopoMap' },
-							{ label: __('Wikimedia', 'fish-catch'), value: 'Wikimedia' },
-							{ label: __('Thunderforest Landscape', 'fish-catch'), value: 'Thunderforest.Landscape' },
-							{ label: __('Thunderforest Outdoors', 'fish-catch'), value: 'Thunderforest.Outdoors' },
-							{ label: __('Thunderforest Transport Dark', 'fish-catch'), value: 'Thunderforest.TransportDark' },
-							{ label: __('Stadia Smooth Dark', 'fish-catch'), value: 'Stadia.AlidadeSmoothDark' },
-							{ label: __('Stadia Toner', 'fish-catch'), value: 'Stadia.StamenToner' },
-							{ label: __('Jawg Dark', 'fish-catch'), value: 'Jawg.Dark' },
-							{ label: __('Jawg Matrix', 'fish-catch'), value: 'Jawg.Matrix' },
-							{ label: __('TopPlus Grey', 'fish-catch'), value: 'TopPlusOpen.Grey' },
-							{ label: __('NASAGIBS ViirsEarthAtNight', 'fish-catch'), value: 'NASAGIBS.ViirsEarthAtNight2012' },
-							{ label: __('Esri World Street Map', 'fish-catch'), value: 'Esri.WorldStreetMap' },
-							{ label: __('Esri NatGeo World Map', 'fish-catch'), value: 'Esri.NatGeoWorldMap' },
-							{ label: __('Esri World Topo Map', 'fish-catch'), value: 'Esri.WorldTopoMap' },
-							{ label: __('USGS Topo', 'fish-catch'), value: 'USGS.USTopo' },
-							{ label: __('USGS Imagery', 'fish-catch'), value: 'USGS.USImagery' }
-						]}
+						options={getMapTemplateOptions(__)}
 						help={__('Choose a map style theme for the location map', 'fish-catch')}
+					/>
+					<RangeControl
+						label={__('Map Height (px)', 'fish-catch')}
+						value={mapHeight}
+						onChange={(value) => setAttributes({ mapHeight: value })}
+						min={200}
+						max={800}
+						step={50}
+						help={__('Height of the map modal in pixels', 'fish-catch')}
 					/>
 				</PanelBody>
 			</InspectorControls>
@@ -809,16 +817,16 @@ export default function Edit({ attributes, setAttributes }) {
 					style={{ maxWidth: '800px', width: '90vw' }}
 				>
 					<div style={{ marginBottom: '16px' }}>
-						<div 
-							id="fish-catch-map-modal" 
-							style={{ 
-								height: '400px', 
-								width: '100%', 
-								border: '1px solid #ddd',
-								borderRadius: '4px',
-								backgroundColor: '#f5f5f5'
-							}}
-						></div>
+					<div 
+						id="fish-catch-map-modal" 
+						style={{ 
+							height: `${mapHeight || 400}px`, 
+							width: '100%', 
+							border: '1px solid #ddd',
+							borderRadius: '4px',
+							backgroundColor: '#f5f5f5'
+						}}
+					></div>
 						<p style={{ fontSize: '13px', color: '#666', marginTop: '12px', marginBottom: '0' }}>
 							{__('Click on the map to set your location, or drag the marker to fine-tune. Use the 📍 button on the map to find your current location.', 'fish-catch')}
 						</p>

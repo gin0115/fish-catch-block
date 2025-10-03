@@ -21,6 +21,12 @@ import { useEffect, useRef } from '@wordpress/element';
 import './editor.scss';
 
 /**
+ * Shared map template configuration
+ */
+import { getMapTemplateOptions } from '../shared/map-templates';
+
+
+/**
  * Edit component for Fish Catch Map block
  */
 export default function Edit({ attributes, setAttributes }) {
@@ -107,7 +113,10 @@ export default function Edit({ attributes, setAttributes }) {
 
             const map = window.L.map(mapRef.current, {
                 scrollWheelZoom: false
-            }).fitBounds(bounds, { padding: [20, 20] });
+            }).fitBounds(bounds, { 
+                padding: [20, 20],
+                maxZoom: 13
+            });
 
             // Add tile layer based on selected style
             let tileLayer;
@@ -172,31 +181,7 @@ export default function Edit({ attributes, setAttributes }) {
                         label={__('Map Style', 'fish-catch')}
                         value={mapStyle}
                         onChange={(value) => setAttributes({ mapStyle: value })}
-                        options={[
-                            { label: __('OpenStreetMap', 'fish-catch'), value: 'OpenStreetMap.Mapnik' },
-                            { label: __('Satellite (Esri)', 'fish-catch'), value: 'Esri.WorldImagery' },
-                            { label: __('Terrain (Stamen)', 'fish-catch'), value: 'Stamen.Terrain' },
-                            { label: __('Watercolor (Stamen)', 'fish-catch'), value: 'Stamen.Watercolor' },
-                            { label: __('Toner (Stamen)', 'fish-catch'), value: 'Stamen.Toner' },
-                            { label: __('CartoDB Positron', 'fish-catch'), value: 'CartoDB.Positron' },
-                            { label: __('CartoDB Dark Matter', 'fish-catch'), value: 'CartoDB.DarkMatter' },
-                            { label: __('OpenTopoMap', 'fish-catch'), value: 'OpenTopoMap' },
-                            { label: __('Wikimedia', 'fish-catch'), value: 'Wikimedia' },
-                            { label: __('Thunderforest Landscape', 'fish-catch'), value: 'Thunderforest.Landscape' },
-                            { label: __('Thunderforest Outdoors', 'fish-catch'), value: 'Thunderforest.Outdoors' },
-                            { label: __('Thunderforest Transport Dark', 'fish-catch'), value: 'Thunderforest.TransportDark' },
-                            { label: __('Stadia Smooth Dark', 'fish-catch'), value: 'Stadia.AlidadeSmoothDark' },
-                            { label: __('Stadia Toner', 'fish-catch'), value: 'Stadia.StamenToner' },
-                            { label: __('Jawg Dark', 'fish-catch'), value: 'Jawg.Dark' },
-                            { label: __('Jawg Matrix', 'fish-catch'), value: 'Jawg.Matrix' },
-                            { label: __('TopPlus Grey', 'fish-catch'), value: 'TopPlusOpen.Grey' },
-                            { label: __('NASAGIBS ViirsEarthAtNight', 'fish-catch'), value: 'NASAGIBS.ViirsEarthAtNight2012' },
-                            { label: __('Esri World Street Map', 'fish-catch'), value: 'Esri.WorldStreetMap' },
-                            { label: __('Esri NatGeo World Map', 'fish-catch'), value: 'Esri.NatGeoWorldMap' },
-                            { label: __('Esri World Topo Map', 'fish-catch'), value: 'Esri.WorldTopoMap' },
-                            { label: __('USGS Topo', 'fish-catch'), value: 'USGS.USTopo' },
-                            { label: __('USGS Imagery', 'fish-catch'), value: 'USGS.USImagery' }
-                        ]}
+                        options={getMapTemplateOptions(__)}
                         help={__('Choose a map style theme', 'fish-catch')}
                     />
                     <RangeControl
