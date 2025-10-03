@@ -39,6 +39,12 @@ This repository contains the source code for development purposes. The releases 
 - **Styling Controls**: Colors, borders, spacing, and image sizes
 - **Block-level Settings**: Per-block customization options
 
+## 📋 Changelog
+
+- **0.0.3** - {future}
+- **0.0.2** - Unified map loader and shared services implementation
+- **1.0.0** - Initial release
+
 ## 🚀 Installation
 
 ### For Users
@@ -89,14 +95,17 @@ fish-catch-block/
 │   │   ├── index.js            # Block registration
 │   │   ├── style.scss          # Block styles
 │   │   └── editor.scss         # Editor-only styles
-│   └── fish-catch-map/          # Map overview block
-│       ├── block.json
-│       ├── edit.js
-│       ├── save.js
-│       ├── frontend.js         # Frontend interactivity
-│       ├── index.js
-│       ├── style.scss
-│       └── editor.scss
+│   ├── fish-catch-map/          # Map overview block
+│   │   ├── block.json
+│   │   ├── edit.js
+│   │   ├── save.js
+│   │   ├── index.js
+│   │   ├── style.scss
+│   │   └── editor.scss
+│   └── shared/                  # Shared services (NEW)
+│       ├── leaflet-loader.js   # Unified Leaflet loading
+│       ├── map-services.js     # Centralized map operations
+│       └── map-templates.js    # Map themes & API keys
 ├── assets/
 │   ├── frontend.js             # Shared frontend JavaScript
 │   └── frontend.css            # Frontend styles
