@@ -1,6 +1,6 @@
 {
     "name": "fish-catch-block",
-    "version": "1.0.0",
+    "version": "0.0.2",
     "description": "A simple WordPress block using wp-scripts",
     "author": "Your Name",
     "license": "GPL-2.0-or-later",

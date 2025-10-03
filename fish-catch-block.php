@@ -3,7 +3,7 @@
  * Plugin Name: Fish Catch Block
  * Plugin URI: https://github.com/gin0115/fish-catch-block
  * Description: A comprehensive WordPress block for anglers to document and display their fishing catches with locations, photos, and interactive maps.
- * Version: 1.0.0
+ * Version: 0.0.2
  * Author: Glynn Quelch
  * Author URI: https://github.com/gin0115
  * License: GPL-2.0-or-later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FISH_CATCH_BLOCK_VERSION', '1.0.0' );
+define( 'FISH_CATCH_BLOCK_VERSION', '0.0.2' );
 define( 'FISH_CATCH_BLOCK_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FISH_CATCH_BLOCK_URL', plugin_dir_url( __FILE__ ) );
 
@@ -39,7 +39,7 @@ function fish_catch_block_assets() {
 				'fish-catch-block-editor',
 				plugin_dir_url( __FILE__ ) . 'build/fish-catch/index.js',
 				$metadata['editorScriptDependencies'] ?? array( 'wp-blocks', 'wp-element', 'wp-editor' ),
-				$metadata['version'] ?? '1.0.0'
+				$metadata['version'] ?? '0.0.2'
 			);
 		}
 
@@ -49,7 +49,7 @@ function fish_catch_block_assets() {
 				'fish-catch-block-editor',
 				plugin_dir_url( __FILE__ ) . 'build/fish-catch/index.css',
 				array(),
-				$metadata['version'] ?? '1.0.0'
+				$metadata['version'] ?? '0.0.2'
 			);
 		}
 
@@ -59,7 +59,7 @@ function fish_catch_block_assets() {
 				'fish-catch-block-style',
 				plugin_dir_url( __FILE__ ) . 'build/fish-catch/style-index.css',
 				array(),
-				$metadata['version'] ?? '1.0.0'
+				$metadata['version'] ?? '0.0.2'
 			);
 		}
 	}
