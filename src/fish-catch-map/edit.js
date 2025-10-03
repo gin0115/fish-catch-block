@@ -2,6 +2,19 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
+
+/**
+ * Shared services
+ */
+import { waitForLeaflet } from '../shared/leaflet-loader.js';
+import { 
+    createMap, 
+    addTileLayerToMap, 
+    cleanupMap, 
+    getMapBounds,
+    getMapConfig,
+    createFishMarker
+} from '../shared/map-services.js';
 import {
     useBlockProps,
     InspectorControls
@@ -80,69 +93,51 @@ export default function Edit({ attributes, setAttributes }) {
     useEffect(() => {
         if (!mapRef.current || mapData.length === 0) return;
 
-        // Wait for Leaflet to be available (enqueued by WordPress)
-        if (typeof window.L === 'undefined') {
-            // If Leaflet isn't available yet, wait a bit and try again
-            const checkLeaflet = () => {
-                if (typeof window.L !== 'undefined') {
-                    console.log('Leaflet is available');    
-                    initializeMap();
-                } else {
-                    setTimeout(checkLeaflet, 100);
-                }
-            };
-            checkLeaflet();
-        } else {
-            initializeMap();
-        }
+        // Wait for Leaflet to be available using shared service
+        waitForLeaflet()
+            .then(() => {
+                console.log('Leaflet is available');
+                initializeMap();
+            })
+            .catch((error) => {
+                console.error('Failed to load Leaflet:', error);
+            });
 
         function initializeMap() {
             if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
+                cleanupMap(mapInstanceRef.current);
             }
 
-            // Calculate bounds from all markers
-            const bounds = window.L.latLngBounds(
-                mapData.map(item => [item.latitude, item.longitude])
-            );
-
-            const map = window.L.map(mapRef.current, {
-                scrollWheelZoom: false
-            }).fitBounds(bounds, {
-                padding: [20, 20],
-                maxZoom: 13
-            });
-
-            // Add tile layer based on selected style
-            let tileLayer;
-            if (window.L.tileLayer.provider && mapStyle !== 'OpenStreetMap.Mapnik') {
-                try {
-                    // Handle API key authentication for different providers
-                    let providerOptions = {};
-
-                    if (mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
-                        providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
-                    }
-
-                    if (mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
-                        providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
-                    }
-
-                    tileLayer = window.L.tileLayer.provider(mapStyle, providerOptions);
-                } catch (e) {
-                    // Fallback to OpenStreetMap if provider fails
-                    tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    });
-                }
+            // Calculate bounds from all markers using shared service
+            const coordinates = mapData.map(item => [item.latitude, item.longitude]);
+            
+            // Create map using shared service
+            let map;
+            if (coordinates.length === 1) {
+                // Single marker - use center and zoom
+                map = createMap(mapRef.current, {
+                    center: coordinates[0],
+                    zoom: 13
+                });
             } else {
-                tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
+                // Multiple markers - use bounds
+                const bounds = getMapBounds(coordinates);
+                map = createMap(mapRef.current, {
+                    bounds: bounds,
+                    boundsOptions: {
+                        padding: [20, 20],
+                        maxZoom: 13
+                    }
                 });
             }
-            tileLayer.addTo(map);
 
-            // Add markers
+            // Add scroll wheel zoom control
+            map.scrollWheelZoom.disable();
+
+            // Add tile layer using shared service
+            addTileLayerToMap(map, mapStyle, getMapConfig());
+
+            // Add markers using shared service
             mapData.forEach(item => {
                 const popupContent = `
                     <div style="min-width: 200px;">
@@ -152,7 +147,9 @@ export default function Edit({ attributes, setAttributes }) {
                     </div>
                 `;
 
-                window.L.marker([item.latitude, item.longitude])
+                // Use shared fish marker creation
+                const fishIcon = createFishMarker(item.totalCount);
+                window.L.marker([item.latitude, item.longitude], { icon: fishIcon })
                     .addTo(map)
                     .bindPopup(popupContent);
             });
@@ -162,7 +159,7 @@ export default function Edit({ attributes, setAttributes }) {
 
         return () => {
             if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
+                cleanupMap(mapInstanceRef.current);
                 mapInstanceRef.current = null;
             }
         };

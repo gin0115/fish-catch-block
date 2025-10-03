@@ -4,6 +4,19 @@
 import { __ } from '@wordpress/i18n';
 
 /**
+ * Shared services
+ */
+import { LeafletLoader } from '../shared/leaflet-loader.js';
+import { 
+    createMap, 
+    addTileLayerToMap, 
+    cleanupMap, 
+    validateCoordinates,
+    getMapConfig,
+    createFishMarker
+} from '../shared/map-services.js';
+
+/**
  * React hook that is used to mark the block wrapper element.
  */
 import {
@@ -79,39 +92,13 @@ class MapManager {
 	}
 
 	/**
-	 * Load Leaflet CSS and JS dynamically
+	 * Load Leaflet using shared service
 	 */
 	async loadLeaflet() {
-		if (this.isLeafletLoaded || window.L) {
-			this.isLeafletLoaded = true;
-			return Promise.resolve();
+		if (!this.leafletLoader) {
+			this.leafletLoader = new LeafletLoader();
 		}
-
-		// Wait for Leaflet to be available (enqueued by WordPress)
-		return new Promise((resolve, reject) => {
-			const checkLeaflet = () => {
-				if (typeof window.L !== 'undefined') {
-					this.isLeafletLoaded = true;
-					resolve();
-				} else {
-					setTimeout(checkLeaflet, 100);
-				}
-			};
-
-			// Set a timeout to avoid infinite waiting
-			const timeout = setTimeout(() => {
-				reject(new Error('Leaflet failed to load within timeout'));
-			}, 10000);
-
-			checkLeaflet();
-
-			// Clear timeout if Leaflet loads successfully
-			const originalResolve = resolve;
-			resolve = () => {
-				clearTimeout(timeout);
-				originalResolve();
-			};
-		});
+		return this.leafletLoader.load();
 	}
 
 	/**
@@ -134,7 +121,7 @@ class MapManager {
 	}
 
 	/**
-	 * Create the Leaflet map instance
+	 * Create the Leaflet map instance using shared service
 	 */
 	createMap() {
 		const container = document.getElementById(this.containerId);
@@ -143,8 +130,11 @@ class MapManager {
 			return;
 		}
 
-		// Initialize map
-		this.map = window.L.map(this.containerId).setView(this.defaultCenter, this.defaultZoom);
+		// Initialize map using shared service
+		this.map = createMap(this.containerId, {
+			center: this.defaultCenter,
+			zoom: this.defaultZoom
+		});
 
 		// Add tile layer based on map style
 		this.updateMapStyle();
@@ -157,7 +147,7 @@ class MapManager {
 	}
 
 	/**
-	 * Update map style
+	 * Update map style using shared service
 	 */
 	updateMapStyle() {
 		console.log('MapManager updateMapStyle called with mapStyle:', this.mapStyle);
@@ -166,36 +156,8 @@ class MapManager {
 			this.map.removeLayer(this.tileLayer);
 		}
 
-		// Add new tile layer based on selected style
-		if (window.L.tileLayer.provider && this.mapStyle !== 'OpenStreetMap.Mapnik') {
-			try {
-				// Handle API key authentication for different providers
-				let providerOptions = {};
-
-				if (this.mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
-					providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
-				}
-
-				if (this.mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
-					providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
-				}
-
-				this.tileLayer = window.L.tileLayer.provider(this.mapStyle, providerOptions);
-			} catch (e) {
-				console.warn('Failed to load map style:', this.mapStyle, 'Falling back to OpenStreetMap');
-				this.tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-					attribution: '© OpenStreetMap contributors'
-				});
-			}
-		} else {
-			this.tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '© OpenStreetMap contributors'
-			});
-		}
-
-		if (this.map) {
-			this.tileLayer.addTo(this.map);
-		}
+		// Add new tile layer using shared service
+		this.tileLayer = addTileLayerToMap(this.map, this.mapStyle, getMapConfig());
 	}
 
 	/**
