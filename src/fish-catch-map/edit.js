@@ -2,15 +2,28 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
+
+/**
+ * Shared services
+ */
+import { waitForLeaflet } from '../shared/leaflet-loader.js';
 import { 
-    useBlockProps, 
-    InspectorControls 
+    createMap, 
+    addTileLayerToMap, 
+    cleanupMap, 
+    getMapBounds,
+    getMapConfig,
+    createFishMarker
+} from '../shared/map-services.js';
+import {
+    useBlockProps,
+    InspectorControls
 } from '@wordpress/block-editor';
-import { 
-    PanelBody, 
+import {
+    PanelBody,
     RangeControl,
     ToggleControl,
-    SelectControl 
+    SelectControl
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useEffect, useRef } from '@wordpress/element';
@@ -30,22 +43,22 @@ import { getMapTemplateOptions } from '../shared/map-templates';
  * Edit component for Fish Catch Map block
  */
 export default function Edit({ attributes, setAttributes }) {
-    const { 
-        mapHeight, 
-        minCatchCount, 
-        showPostTitles, 
+    const {
+        mapHeight,
+        minCatchCount,
+        showPostTitles,
         showCatchCount,
         mapZoom,
-        mapStyle 
+        mapStyle
     } = attributes;
-    
+
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
 
     // Query posts with fish catch data
     const fishCatchPosts = useSelect((select) => {
         const { getEntityRecords } = select('core');
-        
+
         return getEntityRecords('postType', 'post', {
             fish_catch_min_count: minCatchCount,
             fish_catch_has_coords: true,
@@ -60,7 +73,7 @@ export default function Edit({ attributes, setAttributes }) {
             const fishCatchMeta = post.fish_catch_meta;
             const coordinates = fishCatchMeta?.coordinates;
             const totalCount = fishCatchMeta?.total_count || 0;
-            
+
             if (coordinates && coordinates.latitude && coordinates.longitude) {
                 return {
                     id: post.id,
@@ -80,74 +93,51 @@ export default function Edit({ attributes, setAttributes }) {
     useEffect(() => {
         if (!mapRef.current || mapData.length === 0) return;
 
-        // Load Leaflet and providers if not already loaded
-        if (typeof window.L === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = () => {
-                // Load leaflet-providers after leaflet
-                const providersScript = document.createElement('script');
-                providersScript.src = 'https://unpkg.com/leaflet-providers@2.0.0/leaflet-providers.js';
-                providersScript.onload = initializeMap;
-                document.head.appendChild(providersScript);
-            };
-            document.head.appendChild(script);
-
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            document.head.appendChild(link);
-        } else {
-            initializeMap();
-        }
+        // Wait for Leaflet to be available using shared service
+        waitForLeaflet()
+            .then(() => {
+                console.log('Leaflet is available');
+                initializeMap();
+            })
+            .catch((error) => {
+                console.error('Failed to load Leaflet:', error);
+            });
 
         function initializeMap() {
             if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
+                cleanupMap(mapInstanceRef.current);
             }
 
-            // Calculate bounds from all markers
-            const bounds = window.L.latLngBounds(
-                mapData.map(item => [item.latitude, item.longitude])
-            );
-
-            const map = window.L.map(mapRef.current, {
-                scrollWheelZoom: false
-            }).fitBounds(bounds, { 
-                padding: [20, 20],
-                maxZoom: 13
-            });
-
-            // Add tile layer based on selected style
-            let tileLayer;
-            if (window.L.tileLayer.provider && mapStyle !== 'OpenStreetMap.Mapnik') {
-                try {
-                    // Handle API key authentication for different providers
-                    let providerOptions = {};
-                    
-                    if (mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
-                        providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
-                    }
-                    
-                    if (mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
-                        providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
-                    }
-                    
-                    tileLayer = window.L.tileLayer.provider(mapStyle, providerOptions);
-                } catch (e) {
-                    // Fallback to OpenStreetMap if provider fails
-                    tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    });
-                }
+            // Calculate bounds from all markers using shared service
+            const coordinates = mapData.map(item => [item.latitude, item.longitude]);
+            
+            // Create map using shared service
+            let map;
+            if (coordinates.length === 1) {
+                // Single marker - use center and zoom
+                map = createMap(mapRef.current, {
+                    center: coordinates[0],
+                    zoom: 13
+                });
             } else {
-                tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
+                // Multiple markers - use bounds
+                const bounds = getMapBounds(coordinates);
+                map = createMap(mapRef.current, {
+                    bounds: bounds,
+                    boundsOptions: {
+                        padding: [20, 20],
+                        maxZoom: 13
+                    }
                 });
             }
-            tileLayer.addTo(map);
 
-            // Add markers
+            // Add scroll wheel zoom control
+            map.scrollWheelZoom.disable();
+
+            // Add tile layer using shared service
+            addTileLayerToMap(map, mapStyle, getMapConfig());
+
+            // Add markers using shared service
             mapData.forEach(item => {
                 const popupContent = `
                     <div style="min-width: 200px;">
@@ -157,7 +147,9 @@ export default function Edit({ attributes, setAttributes }) {
                     </div>
                 `;
 
-                window.L.marker([item.latitude, item.longitude])
+                // Use shared fish marker creation
+                const fishIcon = createFishMarker(item.totalCount);
+                window.L.marker([item.latitude, item.longitude], { icon: fishIcon })
                     .addTo(map)
                     .bindPopup(popupContent);
             });
@@ -167,7 +159,7 @@ export default function Edit({ attributes, setAttributes }) {
 
         return () => {
             if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
+                cleanupMap(mapInstanceRef.current);
                 mapInstanceRef.current = null;
             }
         };
@@ -202,7 +194,7 @@ export default function Edit({ attributes, setAttributes }) {
                         help={__('Only show posts with this many catches or more', 'fish-catch')}
                     />
                 </PanelBody>
-                
+
                 <PanelBody title={__('Display Options', 'fish-catch')}>
                     <ToggleControl
                         label={__('Show Post Titles', 'fish-catch')}
@@ -220,7 +212,7 @@ export default function Edit({ attributes, setAttributes }) {
             <div {...useBlockProps()}>
                 <div className="fish-catch-map-block">
                     <h3>{__('Fish Catch Map', 'fish-catch')}</h3>
-                    
+
                     {fishCatchPosts === null ? (
                         <p>{__('Loading fishing locations...', 'fish-catch')}</p>
                     ) : mapData.length === 0 ? (
@@ -235,9 +227,9 @@ export default function Edit({ attributes, setAttributes }) {
                             <p style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>
                                 {__('Found', 'fish-catch')} {mapData.length} {__('fishing locations', 'fish-catch')}
                             </p>
-                            <div 
+                            <div
                                 ref={mapRef}
-                                style={{ 
+                                style={{
                                     height: `${mapHeight}px`,
                                     border: '1px solid #ddd',
                                     borderRadius: '8px',

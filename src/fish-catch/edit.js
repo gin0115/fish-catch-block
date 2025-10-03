@@ -4,6 +4,19 @@
 import { __ } from '@wordpress/i18n';
 
 /**
+ * Shared services
+ */
+import { LeafletLoader } from '../shared/leaflet-loader.js';
+import { 
+    createMap, 
+    addTileLayerToMap, 
+    cleanupMap, 
+    validateCoordinates,
+    getMapConfig,
+    createFishMarker
+} from '../shared/map-services.js';
+
+/**
  * React hook that is used to mark the block wrapper element.
  */
 import {
@@ -16,9 +29,9 @@ import {
 /**
  * WordPress components for building the editor interface.
  */
-import { 
-	TextControl, 
-	TextareaControl, 
+import {
+	TextControl,
+	TextareaControl,
 	PanelBody,
 	Button,
 	Modal,
@@ -60,13 +73,13 @@ class MapManager {
 		this.containerId = options.containerId || 'map';
 		this.defaultZoom = options.defaultZoom || 13;
 		this.defaultCenter = options.defaultCenter || [51.505, -0.09]; // London default
-		this.onLocationSelect = options.onLocationSelect || (() => {});
+		this.onLocationSelect = options.onLocationSelect || (() => { });
 		this.mapStyle = options.mapStyle || 'OpenStreetMap.Mapnik';
 		this.map = null;
 		this.marker = null;
 		this.tileLayer = null;
 		this.isLeafletLoaded = false;
-		
+
 		// Configuration for future extensions
 		this.config = {
 			allowMultipleMarkers: options.allowMultipleMarkers || false,
@@ -74,45 +87,18 @@ class MapManager {
 			enableGeolocation: options.enableGeolocation || true,
 			tileLayer: options.tileLayer || 'openstreetmap'
 		};
-		
+
 		this.markers = []; // For future multiple location support
 	}
 
 	/**
-	 * Load Leaflet CSS and JS dynamically
+	 * Load Leaflet using shared service
 	 */
 	async loadLeaflet() {
-		if (this.isLeafletLoaded || window.L) {
-			this.isLeafletLoaded = true;
-			return Promise.resolve();
+		if (!this.leafletLoader) {
+			this.leafletLoader = new LeafletLoader();
 		}
-
-		return new Promise((resolve, reject) => {
-			// Load CSS
-			const cssLink = document.createElement('link');
-			cssLink.rel = 'stylesheet';
-			cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-			cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-			cssLink.crossOrigin = '';
-			document.head.appendChild(cssLink);
-
-			// Load JS
-			const script = document.createElement('script');
-			script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-			script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-			script.crossOrigin = '';
-			
-			script.onload = () => {
-				this.isLeafletLoaded = true;
-				resolve();
-			};
-			
-			script.onerror = () => {
-				reject(new Error('Failed to load Leaflet'));
-			};
-			
-			document.head.appendChild(script);
-		});
+		return this.leafletLoader.load();
 	}
 
 	/**
@@ -120,22 +106,22 @@ class MapManager {
 	 */
 	async initMap(containerId = null) {
 		if (containerId) this.containerId = containerId;
-		
+
 		try {
 			await this.loadLeaflet();
-			
+
 			// Wait a brief moment for DOM updates
 			setTimeout(() => {
 				this.createMap();
 			}, 100);
-			
+
 		} catch (error) {
 			console.error('Failed to initialize map:', error);
 		}
 	}
 
 	/**
-	 * Create the Leaflet map instance
+	 * Create the Leaflet map instance using shared service
 	 */
 	createMap() {
 		const container = document.getElementById(this.containerId);
@@ -144,8 +130,11 @@ class MapManager {
 			return;
 		}
 
-		// Initialize map
-		this.map = window.L.map(this.containerId).setView(this.defaultCenter, this.defaultZoom);
+		// Initialize map using shared service
+		this.map = createMap(this.containerId, {
+			center: this.defaultCenter,
+			zoom: this.defaultZoom
+		});
 
 		// Add tile layer based on map style
 		this.updateMapStyle();
@@ -158,7 +147,7 @@ class MapManager {
 	}
 
 	/**
-	 * Update map style
+	 * Update map style using shared service
 	 */
 	updateMapStyle() {
 		console.log('MapManager updateMapStyle called with mapStyle:', this.mapStyle);
@@ -167,36 +156,8 @@ class MapManager {
 			this.map.removeLayer(this.tileLayer);
 		}
 
-		// Add new tile layer based on selected style
-		if (window.L.tileLayer.provider && this.mapStyle !== 'OpenStreetMap.Mapnik') {
-			try {
-				// Handle API key authentication for different providers
-				let providerOptions = {};
-				
-				if (this.mapStyle.startsWith('Thunderforest.') && window.fishCatchMapConfig && window.fishCatchMapConfig.thunderforestApiKey) {
-					providerOptions.apikey = window.fishCatchMapConfig.thunderforestApiKey;
-				}
-				
-				if (this.mapStyle.startsWith('Jawg.') && window.fishCatchMapConfig && window.fishCatchMapConfig.jawgAccessToken) {
-					providerOptions.accessToken = window.fishCatchMapConfig.jawgAccessToken;
-				}
-				
-				this.tileLayer = window.L.tileLayer.provider(this.mapStyle, providerOptions);
-			} catch (e) {
-				console.warn('Failed to load map style:', this.mapStyle, 'Falling back to OpenStreetMap');
-				this.tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-					attribution: '© OpenStreetMap contributors'
-				});
-			}
-		} else {
-			this.tileLayer = window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '© OpenStreetMap contributors'
-			});
-		}
-		
-		if (this.map) {
-			this.tileLayer.addTo(this.map);
-		}
+		// Add new tile layer using shared service
+		this.tileLayer = addTileLayerToMap(this.map, this.mapStyle, getMapConfig());
 	}
 
 	/**
@@ -254,7 +215,7 @@ class MapManager {
 	 */
 	setExistingLocation(lat, lng) {
 		if (!lat || !lng || !this.map) return;
-		
+
 		this.setSingleLocation(parseFloat(lat), parseFloat(lng));
 		this.setView(lat, lng);
 	}
@@ -297,7 +258,7 @@ class MapManager {
 			(position) => {
 				const lat = position.coords.latitude;
 				const lng = position.coords.longitude;
-				
+
 				this.setView(lat, lng, 15);
 				this.setSingleLocation(lat, lng);
 			},
@@ -387,7 +348,7 @@ export default function Edit({ attributes, setAttributes }) {
 
 	const removeMedia = (mediaIndex) => {
 		const updatedMedia = newCatch.media.filter((_, index) => index !== mediaIndex);
-		setNewCatch({...newCatch, media: updatedMedia});
+		setNewCatch({ ...newCatch, media: updatedMedia });
 	};
 
 	const getCurrentLocation = () => {
@@ -402,17 +363,17 @@ export default function Edit({ attributes, setAttributes }) {
 			(position) => {
 				const lat = position.coords.latitude.toFixed(6);
 				const lng = position.coords.longitude.toFixed(6);
-				
-				setAttributes({ 
-					latitude: lat, 
-					longitude: lng 
+
+				setAttributes({
+					latitude: lat,
+					longitude: lng
 				});
 
 				setIsGettingLocation(false);
 			},
 			(error) => {
 				setIsGettingLocation(false);
-				switch(error.code) {
+				switch (error.code) {
 					case error.PERMISSION_DENIED:
 						alert(__('Location access denied by user.', 'fish-catch'));
 						break;
@@ -445,25 +406,25 @@ export default function Edit({ attributes, setAttributes }) {
 					defaultCenter: latitude && longitude ? [parseFloat(latitude), parseFloat(longitude)] : [54.5, -3], // UK center
 					mapStyle: mapStyle || 'OpenStreetMap.Mapnik',
 					onLocationSelect: (lat, lng) => {
-						setAttributes({ 
-							latitude: lat.toFixed(6), 
-							longitude: lng.toFixed(6) 
+						setAttributes({
+							latitude: lat.toFixed(6),
+							longitude: lng.toFixed(6)
 						});
 					}
 				});
-				
+
 				// Debug: Log the map style being used
 				console.log('MapManager initialized with style:', mapStyle || 'OpenStreetMap.Mapnik');
-				
+
 				mapManagerRef.current.initMap();
-				
+
 				// Set existing location if available
 				if (latitude && longitude) {
 					setTimeout(() => {
 						mapManagerRef.current.setExistingLocation(latitude, longitude);
 					}, 500);
 				}
-				
+
 				// Ensure map style is applied after initialization
 				setTimeout(() => {
 					if (mapManagerRef.current && mapStyle) {
@@ -505,7 +466,7 @@ export default function Edit({ attributes, setAttributes }) {
 	useEffect(() => {
 		if (postId) {
 			const meta = {};
-			
+
 			// Save coordinates if available
 			if (latitude && longitude) {
 				meta.fish_catch_coordinates = {
@@ -513,10 +474,10 @@ export default function Edit({ attributes, setAttributes }) {
 					longitude: parseFloat(longitude)
 				};
 			}
-			
+
 			// Save total fish count
 			meta.fish_catch_total_count = catches.length;
-			
+
 			// Update post meta
 			editPost({ meta });
 		}
@@ -524,8 +485,8 @@ export default function Edit({ attributes, setAttributes }) {
 
 	return (
 		<>
-			<InspectorControls> 
-				<PanelBody title={__( 'Location Settings', 'fish-catch' )}>
+			<InspectorControls>
+				<PanelBody title={__('Location Settings', 'fish-catch')}>
 					<div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
 						<Button
 							variant="secondary"
@@ -533,7 +494,7 @@ export default function Edit({ attributes, setAttributes }) {
 							disabled={isGettingLocation}
 							style={{ width: '100%' }}
 						>
-							{isGettingLocation ? __( 'Getting Location...', 'fish-catch' ) : __( '📍 Get Current Location', 'fish-catch' )}
+							{isGettingLocation ? __('Getting Location...', 'fish-catch') : __('📍 Get Current Location', 'fish-catch')}
 						</Button>
 						<Button
 							variant="secondary"
@@ -544,80 +505,80 @@ export default function Edit({ attributes, setAttributes }) {
 						</Button>
 					</div>
 					<TextControl
-						label={__( 'Location Address', 'fish-catch' )}
+						label={__('Location Address', 'fish-catch')}
 						value={locationAddress}
 						onChange={(value) => setAttributes({ locationAddress: value })}
-						help={__( 'Enter a descriptive address or location name', 'fish-catch' )}
+						help={__('Enter a descriptive address or location name', 'fish-catch')}
 					/>
 					<TextControl
-						label={__( 'Latitude', 'fish-catch' )}
+						label={__('Latitude', 'fish-catch')}
 						value={latitude}
 						onChange={(value) => setAttributes({ latitude: value })}
 					/>
 					<TextControl
-						label={__( 'Longitude', 'fish-catch' )}
+						label={__('Longitude', 'fish-catch')}
 						value={longitude}
 						onChange={(value) => setAttributes({ longitude: value })}
 					/>
 				</PanelBody>
-				
-				<PanelBody title={__( 'Units', 'fish-catch' )}>
+
+				<PanelBody title={__('Units', 'fish-catch')}>
 					<TextControl
-						label={__( 'Size Unit', 'fish-catch' )}
+						label={__('Size Unit', 'fish-catch')}
 						value={sizeUnit}
 						onChange={(value) => setAttributes({ sizeUnit: value })}
-						help={__( 'Default unit for size measurements (e.g., cm, in)', 'fish-catch' )}
+						help={__('Default unit for size measurements (e.g., cm, in)', 'fish-catch')}
 					/>
 					<TextControl
-						label={__( 'Weight Unit', 'fish-catch' )}
+						label={__('Weight Unit', 'fish-catch')}
 						value={weightUnit}
 						onChange={(value) => setAttributes({ weightUnit: value })}
-						help={__( 'Default unit for weight measurements (e.g., lbs, kg)', 'fish-catch' )}
+						help={__('Default unit for weight measurements (e.g., lbs, kg)', 'fish-catch')}
 					/>
 				</PanelBody>
 
-				<PanelBody title={__( 'Display Settings', 'fish-catch' )}>
+				<PanelBody title={__('Display Settings', 'fish-catch')}>
 					<SelectControl
-						label={__( 'Default View', 'fish-catch' )}
+						label={__('Default View', 'fish-catch')}
 						value={defaultView}
 						options={[
-							{ label: __( 'List View', 'fish-catch' ), value: 'list' },
-							{ label: __( 'Grid View', 'fish-catch' ), value: 'grid' }
+							{ label: __('List View', 'fish-catch'), value: 'list' },
+							{ label: __('Grid View', 'fish-catch'), value: 'grid' }
 						]}
 						onChange={(value) => setAttributes({ defaultView: value })}
-						help={__( 'Default view mode for the frontend display', 'fish-catch' )}
+						help={__('Default view mode for the frontend display', 'fish-catch')}
 					/>
 					<SelectControl
-						label={__( 'Image Size', 'fish-catch' )}
+						label={__('Image Size', 'fish-catch')}
 						value={imageSize}
 						options={[
-							{ label: __( 'Small', 'fish-catch' ), value: 'small' },
-							{ label: __( 'Medium', 'fish-catch' ), value: 'medium' },
-							{ label: __( 'Large', 'fish-catch' ), value: 'large' }
+							{ label: __('Small', 'fish-catch'), value: 'small' },
+							{ label: __('Medium', 'fish-catch'), value: 'medium' },
+							{ label: __('Large', 'fish-catch'), value: 'large' }
 						]}
 						onChange={(value) => setAttributes({ imageSize: value })}
-						help={__( 'Size of images in the gallery', 'fish-catch' )}
+						help={__('Size of images in the gallery', 'fish-catch')}
 					/>
 				</PanelBody>
 
-				<PanelBody title={__( 'Card Styling', 'fish-catch' )}>
+				<PanelBody title={__('Card Styling', 'fish-catch')}>
 					<div style={{ marginBottom: '16px' }}>
-						<label style={{ 
-							display: 'block', 
-							marginBottom: '8px', 
+						<label style={{
+							display: 'block',
+							marginBottom: '8px',
 							fontWeight: '500',
 							fontSize: '13px'
 						}}>
-							{__( 'Card Background Color', 'fish-catch' )}
+							{__('Card Background Color', 'fish-catch')}
 						</label>
 						<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 							<input
 								type="color"
 								value={cardBackgroundColor}
 								onChange={(e) => setAttributes({ cardBackgroundColor: e.target.value })}
-								style={{ 
-									width: '40px', 
-									height: '32px', 
+								style={{
+									width: '40px',
+									height: '32px',
 									border: '1px solid #ddd',
 									borderRadius: '4px',
 									cursor: 'pointer'
@@ -631,24 +592,24 @@ export default function Edit({ attributes, setAttributes }) {
 							/>
 						</div>
 					</div>
-					
+
 					<div style={{ marginBottom: '16px' }}>
-						<label style={{ 
-							display: 'block', 
-							marginBottom: '8px', 
+						<label style={{
+							display: 'block',
+							marginBottom: '8px',
 							fontWeight: '500',
 							fontSize: '13px'
 						}}>
-							{__( 'Card Border Color', 'fish-catch' )}
+							{__('Card Border Color', 'fish-catch')}
 						</label>
 						<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 							<input
 								type="color"
 								value={cardBorderColor}
 								onChange={(e) => setAttributes({ cardBorderColor: e.target.value })}
-								style={{ 
-									width: '40px', 
-									height: '32px', 
+								style={{
+									width: '40px',
+									height: '32px',
 									border: '1px solid #ddd',
 									borderRadius: '4px',
 									cursor: 'pointer'
@@ -662,16 +623,16 @@ export default function Edit({ attributes, setAttributes }) {
 							/>
 						</div>
 					</div>
-					
+
 					<TextControl
-						label={__( 'Card Border Radius', 'fish-catch' )}
+						label={__('Card Border Radius', 'fish-catch')}
 						value={cardBorderRadius}
 						onChange={(value) => setAttributes({ cardBorderRadius: parseInt(value) || 12 })}
-						help={__( 'Border radius for catch cards in pixels', 'fish-catch' )}
+						help={__('Border radius for catch cards in pixels', 'fish-catch')}
 						type="number"
 					/>
 				</PanelBody>
-				
+
 				<PanelBody title={__('Map Settings', 'fish-catch')}>
 					<SelectControl
 						label={__('Map Style', 'fish-catch')}
@@ -691,90 +652,90 @@ export default function Edit({ attributes, setAttributes }) {
 					/>
 				</PanelBody>
 			</InspectorControls>
-			
+
 			{isModalOpen && (
 				<Modal
-					title={editingIndex !== null ? __( 'Edit Catch', 'fish-catch' ) : __( 'Add Catch', 'fish-catch' )}
+					title={editingIndex !== null ? __('Edit Catch', 'fish-catch') : __('Add Catch', 'fish-catch')}
 					onRequestClose={() => setIsModalOpen(false)}
 				>
 					<TextControl
-						label={__( 'Species', 'fish-catch' )}
+						label={__('Species', 'fish-catch')}
 						value={newCatch.species}
-						onChange={(value) => setNewCatch({...newCatch, species: value})}
+						onChange={(value) => setNewCatch({ ...newCatch, species: value })}
 					/>
-					<div style={{display: 'flex', gap: '10px'}}>
+					<div style={{ display: 'flex', gap: '10px' }}>
 						<TextControl
-							label={`${__( 'Size', 'fish-catch' )} (${sizeUnit})`}
+							label={`${__('Size', 'fish-catch')} (${sizeUnit})`}
 							value={newCatch.size}
-							onChange={(value) => setNewCatch({...newCatch, size: value.replace(/[^0-9.]/g, '')})}
+							onChange={(value) => setNewCatch({ ...newCatch, size: value.replace(/[^0-9.]/g, '') })}
 							type="number"
 							step="0.1"
 						/>
 						<TextControl
-							label={`${__( 'Weight', 'fish-catch' )} (${weightUnit})`}
+							label={`${__('Weight', 'fish-catch')} (${weightUnit})`}
 							value={newCatch.weight}
-							onChange={(value) => setNewCatch({...newCatch, weight: value.replace(/[^0-9.]/g, '')})}
+							onChange={(value) => setNewCatch({ ...newCatch, weight: value.replace(/[^0-9.]/g, '') })}
 							type="number"
 							step="0.1"
 						/>
 					</div>
 					<TextareaControl
-						label={__( 'Comments', 'fish-catch' )}
+						label={__('Comments', 'fish-catch')}
 						value={newCatch.comments}
-						onChange={(value) => setNewCatch({...newCatch, comments: value})}
+						onChange={(value) => setNewCatch({ ...newCatch, comments: value })}
 					/>
-					
+
 					<MediaUploadCheck>
 						<MediaUpload
 							onSelect={(media) => {
 								// Media can be a single item or an array, so we need to flatten it
 								const mediaArray = Array.isArray(media) ? media : [media];
-								setNewCatch({...newCatch, media: [...(newCatch.media || []), ...mediaArray]});
+								setNewCatch({ ...newCatch, media: [...(newCatch.media || []), ...mediaArray] });
 							}}
 							allowedTypes={['image', 'video']}
 							multiple={true}
 							value={newCatch.media ? newCatch.media.map(m => m.id) : []}
 							render={({ open }) => (
 								<Button onClick={open} variant="secondary">
-									{__( 'Add Media', 'fish-catch' )}
+									{__('Add Media', 'fish-catch')}
 								</Button>
 							)}
 						/>
 					</MediaUploadCheck>
 					{newCatch.media && newCatch.media.length > 0 && (
-						<div style={{marginTop: '10px'}}>
-							<p><strong>{__( 'Selected Media:', 'fish-catch' )}</strong></p>
+						<div style={{ marginTop: '10px' }}>
+							<p><strong>{__('Selected Media:', 'fish-catch')}</strong></p>
 							{newCatch.media.map((mediaItem, mediaIndex) => {
 								// Handle nested arrays - flatten them
 								const actualMedia = Array.isArray(mediaItem) ? mediaItem[0] : mediaItem;
 								return (
-									<div key={mediaIndex} style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px'}}>
+									<div key={mediaIndex} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
 										{actualMedia.mime && actualMedia.mime.startsWith('image/') ? (
-											<img 
-												src={actualMedia.url} 
+											<img
+												src={actualMedia.url}
 												alt={actualMedia.alt || 'Media'}
-												style={{width: '50px', height: '50px', objectFit: 'cover'}}
+												style={{ width: '50px', height: '50px', objectFit: 'cover' }}
 											/>
 										) : (
-											<video 
-												src={actualMedia.url} 
-												style={{width: '50px', height: '50px', objectFit: 'cover'}}
+											<video
+												src={actualMedia.url}
+												style={{ width: '50px', height: '50px', objectFit: 'cover' }}
 											/>
 										)}
 										<span>{actualMedia.title || actualMedia.name || 'Media'}</span>
-										<Button 
-											variant="link" 
-											isDestructive 
+										<Button
+											variant="link"
+											isDestructive
 											onClick={() => removeMedia(mediaIndex)}
 										>
-											{__( 'Remove', 'fish-catch' )}
+											{__('Remove', 'fish-catch')}
 										</Button>
 									</div>
 								);
 							})}
 						</div>
 					)}
-					
+
 					<Button
 						variant="primary"
 						onClick={() => {
@@ -799,14 +760,14 @@ export default function Edit({ attributes, setAttributes }) {
 							setIsModalOpen(false);
 						}}
 					>
-						{editingIndex !== null ? __( 'Update Catch', 'fish-catch' ) : __( 'Add Catch', 'fish-catch' )}
+						{editingIndex !== null ? __('Update Catch', 'fish-catch') : __('Add Catch', 'fish-catch')}
 					</Button>
 				</Modal>
 			)}
 
 			{isMapModalOpen && (
 				<Modal
-					title={__( 'Set Location on Map', 'fish-catch' )}
+					title={__('Set Location on Map', 'fish-catch')}
 					onRequestClose={() => {
 						setIsMapModalOpen(false);
 						if (mapManagerRef.current) {
@@ -817,16 +778,16 @@ export default function Edit({ attributes, setAttributes }) {
 					style={{ maxWidth: '800px', width: '90vw' }}
 				>
 					<div style={{ marginBottom: '16px' }}>
-					<div 
-						id="fish-catch-map-modal" 
-						style={{ 
-							height: `${mapHeight || 400}px`, 
-							width: '100%', 
-							border: '1px solid #ddd',
-							borderRadius: '4px',
-							backgroundColor: '#f5f5f5'
-						}}
-					></div>
+						<div
+							id="fish-catch-map-modal"
+							style={{
+								height: `${mapHeight || 400}px`,
+								width: '100%',
+								border: '1px solid #ddd',
+								borderRadius: '4px',
+								backgroundColor: '#f5f5f5'
+							}}
+						></div>
 						<p style={{ fontSize: '13px', color: '#666', marginTop: '12px', marginBottom: '0' }}>
 							{__('Click on the map to set your location, or drag the marker to fine-tune. Use the 📍 button on the map to find your current location.', 'fish-catch')}
 						</p>
@@ -859,117 +820,117 @@ export default function Edit({ attributes, setAttributes }) {
 					</div>
 				</Modal>
 			)}
-			
-			<div { ...useBlockProps() }>
+
+			<div {...useBlockProps()}>
 				<div className="location-info">
-                    {locationAddress && (
-                        <p style={{color: '#1e1e1e', margin: '0 0 8px 0'}}>{locationAddress}</p>
-                    )}
-                    {latitude && longitude && (
-                        <p style={{color: '#666', margin: '0 0 8px 0', fontSize: '14px'}}>{latitude}, {longitude}</p>
-                    )}
-                    {!locationAddress && !latitude && !longitude && (
-                        <p style={{color: '#666', fontStyle: 'italic', margin: '0 0 8px 0'}}>{ __( 'No location set', 'fish-catch' ) }</p>
-                    )}
-                </div>
-                
-                <div className="catches-section">
-                    <Button
-                        variant="primary"
-                        onClick={openNewCatchModal}
-                    >
-                        {__( 'Add Catch', 'fish-catch' )}
-                    </Button>
-                    
-                    {catches.length > 0 && (
-                        <div className="catches-list">
-                            <h4 style={{color: '#1e1e1e', marginBottom: '12px'}}>{__( 'Catches', 'fish-catch' )}</h4>
-                            {catches.map((catchItem, index) => (
-                                <div key={index} className="catch-item" style={{border: '1px solid #ddd', borderRadius: '8px', padding: '12px', marginBottom: '8px', backgroundColor: '#f9f9f9'}}>
-                                    <div style={{display: 'flex', gap: '12px'}}>
-                                        {catchItem.media && catchItem.media.length > 0 && (
-                                            <div className="catch-media" style={{flexShrink: 0}}>
-                                                {(() => {
-                                                    const firstMedia = Array.isArray(catchItem.media[0]) ? catchItem.media[0][0] : catchItem.media[0];
-                                                    const remainingCount = catchItem.media.length - 1;
-                                                    return (
-                                                        <div style={{position: 'relative', width: '60px', height: '60px', overflow: 'hidden', borderRadius: '6px'}}>
-                                                            {firstMedia.mime && firstMedia.mime.startsWith('image/') ? (
-                                                                <img 
-                                                                    src={firstMedia.url} 
-                                                                    alt={firstMedia.alt || 'Catch media'}
-                                                                    style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                                                                />
-                                                            ) : (
-                                                                <video 
-                                                                    src={firstMedia.url} 
-                                                                    style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                                                                />
-                                                            )}
-                                                            {remainingCount > 0 && (
-                                                                <div style={{
-                                                                    position: 'absolute',
-                                                                    bottom: '2px',
-                                                                    right: '2px',
-                                                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                                                    color: 'white',
-                                                                    fontSize: '10px',
-                                                                    fontWeight: 'bold',
-                                                                    padding: '2px 4px',
-                                                                    borderRadius: '3px',
-                                                                    lineHeight: '1'
-                                                                }}>
-                                                                    +{remainingCount}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </div>
-                                        )}
-                                        <div style={{flex: 1, minWidth: 0}}>
-                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
-                                                <div style={{flex: 1}}>
-                                                    <h5 style={{margin: '0', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.3', color: '#1e1e1e'}}>
-                                                        {catchItem.species || __( 'Unknown Species', 'fish-catch' )}
-                                                        {(catchItem.size || catchItem.weight) && (
-                                                            <span style={{fontWeight: 'normal', color: '#666', fontSize: '13px', marginLeft: '8px'}}>
-                                                                ({[
-                                                                    catchItem.size && `${catchItem.size}${sizeUnit}`,
-                                                                    catchItem.weight && `${catchItem.weight}${weightUnit}`
-                                                                ].filter(Boolean).join(' | ')})
-                                                            </span>
-                                                        )}
-                                                    </h5>
-                                                </div>
-                                                <div className="catch-actions" style={{display: 'flex', gap: '4px', marginLeft: '8px'}}>
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="small"
-                                                        onClick={() => editCatch(index)}
-                                                    >
-                                                        {__( 'Edit', 'fish-catch' )}
-                                                    </Button>
-                                                    <Button
-                                                        variant="link"
-                                                        isDestructive
-                                                        size="small"
-                                                        onClick={() => removeCatch(index)}
-                                                    >
-                                                        {__( 'Remove', 'fish-catch' )}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            {catchItem.comments && (
-                                                <p style={{margin: '0', fontSize: '13px', color: '#555', lineHeight: '1.4'}}>{catchItem.comments}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+					{locationAddress && (
+						<p style={{ color: '#1e1e1e', margin: '0 0 8px 0' }}>{locationAddress}</p>
+					)}
+					{latitude && longitude && (
+						<p style={{ color: '#666', margin: '0 0 8px 0', fontSize: '14px' }}>{latitude}, {longitude}</p>
+					)}
+					{!locationAddress && !latitude && !longitude && (
+						<p style={{ color: '#666', fontStyle: 'italic', margin: '0 0 8px 0' }}>{__('No location set', 'fish-catch')}</p>
+					)}
+				</div>
+
+				<div className="catches-section">
+					<Button
+						variant="primary"
+						onClick={openNewCatchModal}
+					>
+						{__('Add Catch', 'fish-catch')}
+					</Button>
+
+					{catches.length > 0 && (
+						<div className="catches-list">
+							<h4 style={{ color: '#1e1e1e', marginBottom: '12px' }}>{__('Catches', 'fish-catch')}</h4>
+							{catches.map((catchItem, index) => (
+								<div key={index} className="catch-item" style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '12px', marginBottom: '8px', backgroundColor: '#f9f9f9' }}>
+									<div style={{ display: 'flex', gap: '12px' }}>
+										{catchItem.media && catchItem.media.length > 0 && (
+											<div className="catch-media" style={{ flexShrink: 0 }}>
+												{(() => {
+													const firstMedia = Array.isArray(catchItem.media[0]) ? catchItem.media[0][0] : catchItem.media[0];
+													const remainingCount = catchItem.media.length - 1;
+													return (
+														<div style={{ position: 'relative', width: '60px', height: '60px', overflow: 'hidden', borderRadius: '6px' }}>
+															{firstMedia.mime && firstMedia.mime.startsWith('image/') ? (
+																<img
+																	src={firstMedia.url}
+																	alt={firstMedia.alt || 'Catch media'}
+																	style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+																/>
+															) : (
+																<video
+																	src={firstMedia.url}
+																	style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+																/>
+															)}
+															{remainingCount > 0 && (
+																<div style={{
+																	position: 'absolute',
+																	bottom: '2px',
+																	right: '2px',
+																	backgroundColor: 'rgba(0, 0, 0, 0.8)',
+																	color: 'white',
+																	fontSize: '10px',
+																	fontWeight: 'bold',
+																	padding: '2px 4px',
+																	borderRadius: '3px',
+																	lineHeight: '1'
+																}}>
+																	+{remainingCount}
+																</div>
+															)}
+														</div>
+													);
+												})()}
+											</div>
+										)}
+										<div style={{ flex: 1, minWidth: 0 }}>
+											<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+												<div style={{ flex: 1 }}>
+													<h5 style={{ margin: '0', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.3', color: '#1e1e1e' }}>
+														{catchItem.species || __('Unknown Species', 'fish-catch')}
+														{(catchItem.size || catchItem.weight) && (
+															<span style={{ fontWeight: 'normal', color: '#666', fontSize: '13px', marginLeft: '8px' }}>
+																({[
+																	catchItem.size && `${catchItem.size}${sizeUnit}`,
+																	catchItem.weight && `${catchItem.weight}${weightUnit}`
+																].filter(Boolean).join(' | ')})
+															</span>
+														)}
+													</h5>
+												</div>
+												<div className="catch-actions" style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
+													<Button
+														variant="secondary"
+														size="small"
+														onClick={() => editCatch(index)}
+													>
+														{__('Edit', 'fish-catch')}
+													</Button>
+													<Button
+														variant="link"
+														isDestructive
+														size="small"
+														onClick={() => removeCatch(index)}
+													>
+														{__('Remove', 'fish-catch')}
+													</Button>
+												</div>
+											</div>
+											{catchItem.comments && (
+												<p style={{ margin: '0', fontSize: '13px', color: '#555', lineHeight: '1.4' }}>{catchItem.comments}</p>
+											)}
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
 			</div>
 		</>
 	);
