@@ -41,7 +41,8 @@ This repository contains the source code for development purposes. The releases 
 
 ## 📋 Changelog
 
-- **0.0.3** - {future}
+- **0.0.4** - The block's editor script and style load in the editor only, not on the front end
+- **0.0.3** - House keeping
 - **0.0.2** - Unified map loader and shared services implementation
 - **1.0.0** - Initial release
 
