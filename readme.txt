@@ -5,7 +5,7 @@ Tags: fishing, catch, blocks, gutenberg, maps, location
 Requires at least: 6.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 0.0.2
+Stable tag: 0.0.4
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,9 @@ The Fish Catch Map Block uses custom fish-shaped markers with catch count overla
 6. API key configuration in WordPress General Settings
 
 == Changelog ==
+
+= 0.0.4 =
+* The block's editor script and style load in the editor only, not on the front end
 
 = 1.0.0 =
 * Initial release
