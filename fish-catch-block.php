@@ -33,24 +33,27 @@ function fish_catch_block_assets() {
 	if ( file_exists( $block_json_path ) ) {
 		$metadata = json_decode( file_get_contents( $block_json_path ), true );
 
-		// Enqueue editor script
-		if ( isset( $metadata['editorScript'] ) ) {
-			wp_enqueue_script(
-				'fish-catch-block-editor',
-				plugin_dir_url( __FILE__ ) . 'build/fish-catch/index.js',
-				$metadata['editorScriptDependencies'] ?? array( 'wp-blocks', 'wp-element', 'wp-editor' ),
-				$metadata['version'] ?? '0.0.2'
-			);
-		}
+		// Editor only: enqueue_block_assets also fires on the front end.
+		if ( is_admin() ) {
+			// Enqueue editor script
+			if ( isset( $metadata['editorScript'] ) ) {
+				wp_enqueue_script(
+					'fish-catch-block-editor',
+					plugin_dir_url( __FILE__ ) . 'build/fish-catch/index.js',
+					$metadata['editorScriptDependencies'] ?? array( 'wp-blocks', 'wp-element', 'wp-editor' ),
+					$metadata['version'] ?? '0.0.2'
+				);
+			}
 
-		// Enqueue editor style
-		if ( isset( $metadata['editorStyle'] ) ) {
-			wp_enqueue_style(
-				'fish-catch-block-editor',
-				plugin_dir_url( __FILE__ ) . 'build/fish-catch/index.css',
-				array(),
-				$metadata['version'] ?? '0.0.2'
-			);
+			// Enqueue editor style
+			if ( isset( $metadata['editorStyle'] ) ) {
+				wp_enqueue_style(
+					'fish-catch-block-editor',
+					plugin_dir_url( __FILE__ ) . 'build/fish-catch/index.css',
+					array(),
+					$metadata['version'] ?? '0.0.2'
+				);
+			}
 		}
 
 		// Enqueue frontend style
